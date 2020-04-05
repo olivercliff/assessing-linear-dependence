@@ -30,10 +30,28 @@ if ~exist('granger_causality.m','file')
   addpath('..');
 end
 
+% Download the HCP data (if it's not already there)
+datafile = 'data/hcp_rsfMRI.mat';
+if ~exist(datafile,'file')
+  
+  if ~exist('data','dir')
+    mkdir('data');
+  end
+  
+  fprintf('HCP data not downloaded yet. I''ll get it now, this may take a while.\n');
+  
+  % Download the hcp_rsfMRI.mat file from figshare
+  url = 'https://ndownloader.figshare.com/files/22217589';
+  out_fname = websave(datafile,url);
+  fprintf(['Human Connectome Project rsfMRI data ',...
+            'downloaded from figshare to:\n%s\n'],out_fname);
+
+end
+
 %% Load HCP data
 
 fprintf('Loading data...\n');
-load data/hcp_rsfMRI.mat
+load(datafile);
 fprintf('Done.\n');
 
 % Normalise (otherwise we have global effects in trends, etc.)

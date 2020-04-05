@@ -1,26 +1,21 @@
-function [Xf,Yp,Xp,Wp] = embed(X,Y,p,q,W)
+function p = order(X)
 %EMBED Embed the past of vector AR process.
-%   [Xf,Yp,Xp] = EMBED(X,Y,P,Q) returns the K-by-N matrix Xf of future values of X,
-%   the LQ-by-N matrix Yp of past values of Y, and the KP-by-N matrix Xp of past
-%   values of X. The inputs are the N-by-L matrix Y, the N-by-K matrix X, and
-%   their embedding (history) lengths P and Q as scalars. Columns of X and Y
-%   correspond to time series and rows correspond to time indices.
-%
-%   [...,Wp] = EMBED(...,W) returns the N-by-C matrix Wp of past values of
-%   the conditoinal N-by-C matrix W.
+%   P = ORDER(X) returns the optimal AR order P of the the N-by-K matrix X
+%   using the first partial autocorrelation that is less than 1.96/sqrt(N) or
+%   round(N/3), whichever comes first.
 %
 %   Example:
-%     % Fix history lengths p and q to 10, then compute the transfer entropy
+%     % Infer optimal history lengths p and q, then compute the transfer entropy
 %     % from Y to X with this embedding. Confirm this is half the granger causality
 %     X = randn(100,5);
 %     Y = randn(100,3);
-%     p = 10;
-%     q = 10;
+%     p = order(X);
+%     q = order(Y);
 %     [Xf,Yp,Xp] = embed(X,Y,p,q);
 %     te = mvmi(Xf,Yp,Xp)
 %     gc = mvgc(X,Y,[p q])
 %
-%   See also <a href="matlab:help mvgc">mvgc</a>, <a href="matlab:help mvmi">mvmi</a>, <a href="matlab:help order">order</a>
+%   See also <a href="matlab:help mvgc">mvgc</a>, <a href="matlab:help mvmi">mvmi</a>, <a href="matlab:help embed">embed</a>
 
 % ------------------------------------------------------------------------------
 % Copyright (C) 2020, Oliver M. Cliff <oliver.m.cliff@gmail.com>,
@@ -45,34 +40,21 @@ function [Xf,Yp,Xp,Wp] = embed(X,Y,p,q,W)
 % this program. If not, see <http://www.gnu.org/licenses/>.
 % ------------------------------------------------------------------------------
 
-  if nargin < 5
-    W = [];
+T = size(X,1);
+D = size(X,2);
+M = round(T/3);
+
+ps = zeros(D,1);
+for i = 1:D
+  cp = find(abs(parcorr(X(:,i),M)) < 1.96./sqrt(T),1);
+  if isempty(cp)
+    ps(i) = M;
+  else
+    ps(i) = cp - 2;
   end
+end
+p = max(ps);
 
-  N = size(X,1);
-  dim_X = size(X,2);
-  dim_Y = size(Y,2);
-
-  Xf = X(p+1:end,:);
-  Xp = zeros(N-p,dim_X*p);
-  for i = 1:p
-    seq = i:N-p+i-1;
-    dims = (i-1)*dim_X+1:i*dim_X;
-    Xp(:,dims) = X(seq,:);
-  end
-
-  Yp = zeros(N-q,dim_Y*q);
-  for i = 1:q
-    seq = i:N-q+i-1;
-    dims = (i-1)*dim_Y+1:i*dim_Y;
-    Yp(:,dims) = Y(seq,:);
-  end
-
-  pq_max = max([p,q]);
-  Xf = Xf(1-p+pq_max:end,:);
-  Xp = Xp(1-p+pq_max:end,:);
-  Yp = Yp(1-q+pq_max:end,:);
-
-  % Ensure W is the right length
-  Wp = W(pq_max+1:end,:);
+if p == 0
+  p = 1;
 end

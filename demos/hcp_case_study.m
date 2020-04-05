@@ -1,6 +1,30 @@
+% HCP_CASE_STUDY   Runs the Human Connectome Project case study from the paper.
+
+% ------------------------------------------------------------------------------
+% Copyright (C) 2020, Oliver M. Cliff <oliver.m.cliff@gmail.com>,
+%
+% If you use this code for your research, please cite the following paper:
+%
+% Oliver M. Cliff, Leonardo Novelli, Ben D Fulcher, James M. Shine,
+% Joseph T. Lizier, "Exact Inference of Linear Dependence for Multiple
+% Autocorrelated Time Series," arXiv preprint arXiv:2003.03887 (2020).
+%
+% This function is free software: you can redistribute it and/or modify it under
+% the terms of the GNU General Public License as published by the Free Software
+% Foundation, either version 3 of the License, or (at your option) any later
+% version.
+%
+% This program is distributed in the hope that it will be useful, but WITHOUT
+% ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+% FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+% details.
+%
+% You should have received a copy of the GNU General Public License along with
+% this program. If not, see <http://www.gnu.org/licenses/>.
+% ------------------------------------------------------------------------------
 
 clear
-% close all
+close all
 
 if ~exist('granger_causality.m','file')
   addpath('..');
@@ -21,10 +45,12 @@ for i = 1:size(dat,3)
   dat(:,:,i) = s_bold';
 end
 
-%% Reproduce which HCP experiment from the paper?
-
-% 1 (MI), 2 (MI with MV dim 2), 3 (GC, optimal embedding), 4 (GC, high
-% embedding), 5 (GC with MV dim 2)
+% Reproduce which HCP experiment from the paper?
+% - 1: MI
+% - 2: MI with MV dim 2
+% - 3: GC, optimal embedding
+% - 4: GC, high embedding
+% - 5: GC with MV dim 2 (not in paper)
 which_test = 4;
 
 switch which_test
@@ -40,7 +66,7 @@ switch which_test
     dims = 1; % 1D
   case 4
     is_granger = true; % GC
-    embedding = [100 100]; % Over optimistic (pesimistic?) embedding
+    embedding = [100 100]; % Overly optimistic (pesimistic?) embedding
     dims = 1; % 1D
   case 5
     is_granger = true; % GC
@@ -51,7 +77,7 @@ end
 %% Default params
 
 seed = 1; % Used for the paper
-generate_tikz = true;
+generate_tikz = false;
 
 R = 1000; % Number of trials
 S = 5000; % MC sample size
@@ -131,13 +157,13 @@ for r = 1:R
   
   % Compute our measures
   if is_granger
-    [measure(r),dist] = granger_causality(X,Y,W,embedding,'none',false);
+    [measure(r),dist] = mvgc(X,Y,W,embedding,'none');
   else
-    [measure(r),dist] = conditional_mutual_information(X,Y,W,'none',false);
+    [measure(r),dist] = mvmi(X,Y,W,'none');
   end
   
-  pvals_LR(r) = compute_significance(measure(r), dist, 'lr');
-  pvals_E(r) = compute_significance(measure(r), dist, 'exact',S);
+  pvals_LR(r) = significance(measure(r), dist, 'lr');
+  pvals_E(r) = significance(measure(r), dist, 'exact',S);
   
   if verbose
     if mod(r,10) == 0

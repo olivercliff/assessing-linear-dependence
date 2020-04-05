@@ -1,4 +1,4 @@
-% AR_SIMULATION   Runs the simulations for all numerical evalution from the paper.
+% NUMERICAL_EVALUATION   Runs the simulations for all numerical evalution from the paper.
 
 % ------------------------------------------------------------------------------
 % Copyright (C) 2020, Oliver M. Cliff <oliver.m.cliff@gmail.com>,
@@ -41,7 +41,7 @@ figure_opts = {'2a','2b';
 
 % Select from figure_opts or choose 'na' or any other string that is
 % not in list to select your own params below
-which_figure = '6a';
+which_figure = '2b';
 
 fig_id = strcmp(figure_opts,which_figure);
 
@@ -49,10 +49,12 @@ verbose = true;
 
 % Is the input a valid figure (2a-8b)...?
 if any(fig_id(:))
+  fprintf('You chose Fig. %s\n', which_figure);
   [fig,subfig] = find(fig_id);
   config = get_configuration(fig,subfig);
 % ...or does user want to choose their own settings.
 else
+  fprintf('You selected %s, using the following params:\n', which_figure);
   config.T = 2^9; % Dataset length
   config.R = 100; % Number of runs/trials
   config.S = 1000; % Number of samples for MC distribution
@@ -72,21 +74,20 @@ else
   config.alpha = 0.05; % significance level
 
   config.seed = now; % RNG seed
+
+  disp(config);
   
   if ~config.is_granger && any(config.embedding > 0)
     warning('Embedding level %d set but variables will not be embeded (computing CMI, not GC).\n', config.embedding);
   end
 end
 
-config.R = 100;
-
-
 %% Set up filters and simulator
 
 if config.is_granger
-  compute_measure = @(X,Y,W) mvgc(X,Y,W,config.embedding,'none',false);
+  compute_measure = @(X,Y,W) mvgc(X,Y,W,config.embedding,'none');
 else
-  compute_measure = @(X,Y,W) mvmi(X,Y,W,'none',false);
+  compute_measure = @(X,Y,W) mvmi(X,Y,W,'none');
 end
 
 if config.to_filter == 1

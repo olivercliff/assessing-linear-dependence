@@ -1,4 +1,4 @@
-function [v,V] = bartlett_correction_mv(Z,taper,full)
+function [v,V] = bartlett(Z,taper,full)
 
 if nargin < 3
   full = false;
@@ -17,7 +17,6 @@ v = zeros(dim);
 % Set up tapering
 M = ceil(2*sqrt(N));
 ks = abs([-M+1:0, 1:M-1]);
-ac_ks = 1:M-1;
 
 lambda_k = ones(2*M-1,1);
 biasing = 'unbiased';

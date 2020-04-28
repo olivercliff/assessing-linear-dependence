@@ -26,7 +26,7 @@
 clear
 close all
 
-if ~exist('granger_causality.m','file')
+if ~exist('mvgc.m','file')
   addpath('..');
 end
 
@@ -41,8 +41,8 @@ figure_opts = {'2a','2b';
 
 % Select from figure_opts or choose 'na' or any other string that is
 % not in list to select your own params below
-which_figure = '2b';
-
+% which_figure = '3a';
+which_figure = '';
 fig_id = strcmp(figure_opts,which_figure);
 
 verbose = true;
@@ -68,26 +68,31 @@ else
 
   config.causal = false; % Non-causal (null model, should we be testing true negatives or false positives?)
 
-  config.is_granger = true; % Granger causality (not CMI)
-  config.embedding = [-1 -1]; % Optimal (set 0 for p = q = 1, and >0 for a specific embedding on both)
+  config.is_granger = false; % Granger causality (not CMI)
+  config.is_cmi = false; % Granger causality (not CMI)
+  config.p = 'auto'; % Optimal embedding, set to numeric for a specific embedding
+  config.q = 'auto';
 
   config.alpha = 0.05; % significance level
 
   config.seed = now; % RNG seed
 
   disp(config);
-  
-  if ~config.is_granger && any(config.embedding > 0)
-    warning('Embedding level %d set but variables will not be embeded (computing CMI, not GC).\n', config.embedding);
-  end
 end
+
+% Use standard F-tests or the asymptotic LR tests
+config.f_test = true;
 
 %% Set up filters and simulator
 
-if config.is_granger
-  compute_measure = @(X,Y,W) mvgc(X,Y,W,config.embedding,'none');
+if ~config.is_cmi
+  compute_measure = @(X,Y,W,varargin) mvcorr(X,Y,W,varargin{:});
 else
-  compute_measure = @(X,Y,W) mvmi(X,Y,W,'none');
+  if config.is_granger
+    compute_measure = @(X,Y,W,varargin) mvgc(X,Y,W,varargin{:});
+  else
+    compute_measure = @(X,Y,W,varargin) mvmi(X,Y,W,varargin{:});
+  end
 end
 
 if config.to_filter == 1
@@ -178,11 +183,8 @@ for r = 1:config.R
   end
 
   % Compute measure (GC or MI)
-  [measure(r),stats] = compute_measure(X,Y,W);
-  
-  % Generate p-values
-  pvals_LR(r) = significance(measure(r),stats,'lr');
-  pvals_E(r) = significance(measure(r),stats,'exact');
+  [measure(r),pvals_E(r),~,stats] = compute_measure(X,Y,W,'test','exact');
+  pvals_LR(r) = significance(measure(r),stats,'test','asymptotic');
   
   if verbose
     if mod(r,10) == 0
@@ -200,7 +202,12 @@ hold on;
 plot([0 1], [0 1], 'k--');
 ph1 = plot(sort(pvals_LR),linspace(0,1,config.R), '-', 'color', col_LR, 'linewidth', 1);
 ph2 = plot(sort(pvals_E),linspace(0,1,config.R), '-', 'color', col_E, 'linewidth', 1);
-legend([ph1 ph2], 'LR test', 'Exact test','location', 'best');
+
+if config.f_test
+  legend([ph1 ph2], 'Standard F-test', 'Exact test','location', 'best');
+else
+  legend([ph1 ph2], 'LR test', 'Exact test','location', 'best');
+end
 
 fprintf('LR test FPR at %d%% significance: %.3g\n', config.alpha*100, mean(pvals_LR <= config.alpha) );
 fprintf('Exact test FPR at %d%% significance: %.3g\n', config.alpha*100, mean(pvals_E <= config.alpha) );

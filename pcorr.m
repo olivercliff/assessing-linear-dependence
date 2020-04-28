@@ -1,17 +1,15 @@
-function [cmi,pval,dist,stats] = mvmi(X,Y,varargin)
-%MVMI Mutual information (conditional or unconditional) for vector AR processes.
-%   I = MVMI(X,Y) returns the scalar estimate of the linear-Gaussian
-%   Mutual information between the N-by-K matrix X and the N-by-L
-%   matrix Y. Columns of X and Y correspond to time series and rows
-%   correspond to time indices.
+function [coeff,pval,dist,stats] = pcorr(X,Y,varargin)
+%PC Correlation (partial or Pearson) for vector AR processes.
+%   PR = PCORR(X,Y) returns the scalar estimate of the correlation
+%   between the N-by-1 vectors X and Y.
 %
-%   I = MVMI(X,Y,W,...) returns the scalar estimate of linear-Gaussian
-%   Mutual information between X and Y conditioned on the N-by-C matrix W.
+%   PR = PCORR(X,Y,W,...) returns the scalar estimate of partial
+%   correlation between X and Y conditioned on the N-by-C matrix W.
 %
-%   [I,PVAL] = MVMI(...) also returns PVAL, the p-value for testing the
+%   [PR,PVAL] = PCORR(...) also returns PVAL, the p-value for testing the
 %   hypothesis of no correlation
 %
-%   [...] = MVMI(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies additional
+%   [...] = PCORR(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies additional
 %   parameters and their values.  Valid parameters are the following:
 %
 %         Parameter                   Value
@@ -38,15 +36,13 @@ function [cmi,pval,dist,stats] = mvmi(X,Y,varargin)
 %                                     covariance matrix.
 %
 %   Example:
-%     % Compute mutual information between X and Y and obtain
+%     % Compute the sample correlation between X and Y and obtain
 %     % both Student's t-test p-value and the exact test p-value.
 %     % (these values should be similar)
-%     X = randn(100,3);
-%     Y = randn(100,5);
-%     [I,PVAL] = MVMI(X,Y)
-%     [I,PVAL] = MVMI(X,Y,'test','standard')
-%
-%   See also <a href="matlab:help mvgc">mvgc</a>, <a href="matlab:help pcd">pc</a>
+%     X = randn(100,1);
+%     Y = randn(100,1);
+%     [PR,PVAL] = PCORR(X,Y)
+%     [PR,PVAL] = PCORR(X,Y,'test','standard')
 
 % ------------------------------------------------------------------------------
 % Copyright (C) 2020, Oliver M. Cliff <oliver.m.cliff@gmail.com>,
@@ -73,14 +69,13 @@ function [cmi,pval,dist,stats] = mvmi(X,Y,varargin)
 
 parser = inputParser;
 
-isnumericMatrix = @(x) (isnumeric(x) && ismatrix(x));
-
-addRequired(parser,'X',isnumericMatrix);
-addRequired(parser,'Y',isnumericMatrix);
-addOptional(parser,'W',[],isnumericMatrix);
+addRequired(parser,'X',@isvector);
+addRequired(parser,'Y',@isvector);
+addOptional(parser,'W',[],@(x) (isnumeric(x) && ismatrix(x)));
 
 parser = parseParameters(parser,X,Y,varargin{:});
-params = varargin(2:end);
+
+params = varargin;
 if ~contains(parser.UsingDefaults,'W')
   params = varargin(2:end);
 end
@@ -91,21 +86,20 @@ end
 % condtiionals)
 stats.eta = eta;
 stats.cs = cs;
-stats.mv = false;
+stats.mv = parser.Results.multivariateBartlett;
 stats.dof = length(cs);
 stats.N_o = length(X);
-stats.to_cmi = @(x) x;
-stats.cmi = true;
+stats.cmi = false;
 
-cmi = -0.5*sum(log(1-pr.^2));
+coeff = sum(pr);
 
 if nargout > 1
-  sig = @(cmi,stats) significance(cmi,stats,params{:});
+  
+  sig = @(coeff,stats) significance(coeff,stats,params{:});
+  
   if nargout > 2
-    [pval,dist] = sig(cmi,stats);
+    [pval,dist] = sig(coeff,stats);
   else
-    pval = sig(cmi,stats);
+    pval = sig(coeff,stats);
   end
-end
-
 end

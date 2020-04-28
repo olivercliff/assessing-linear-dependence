@@ -1,4 +1,4 @@
-function [F,stats] = mvgc(X,Y,W,embedding,taper_method_str)
+function [F,pval,dist,stats] = mvgc(X,Y,varargin)
 %MVGC Multivariate Granger causality (conditional or unconditional).
 %   F = MVGC(X,Y) returns the scalar estimate of the Granger causality
 %   from the N-by-L matrix Y to the N-by-K matrix X. Columns of X and Y
@@ -7,22 +7,40 @@ function [F,stats] = mvgc(X,Y,W,embedding,taper_method_str)
 %   F = MVGC(X,Y,W,...) returns the scalar estimate of Granger causality
 %   between X and Y conditioned on the N-by-C matrix W.
 %
-%   [F,STATS] = MVGC(...) also returns STATS, a structure of statistics that
-%   are used as input to <a href="matlab:help significance">significance</a> function.
+%   [I,PVAL] = MVMI(...) also returns PVAL, the p-value for testing the
+%   hypothesis of no correlation
 %
-%   [...] = MVGC(...,EMBEDDING) optional 2 element vector for setting the
-%   embeddings (history lengths) of both X and Y. If EMBEDDING(i) < 0, the
-%   embedding is optimally chosen using the <a href="matlab:help order">order</a> function. If EMBEDDING(i) > 0,
-%   then a fixed embedding length of EMBEDDING(i) is used. Default is
-%   EMBEDDING = [-1 -1].
+%   [...] = MVMI(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies additional
+%   parameters and their values.  Valid parameters are the following:
 %
-%   [...] = MVGC(...,TAPER) optional string specifying the taper method used
-%   for inferring the autocorrelation function for Bartlett''s formula using one
-%   of the following techniques:
-%     - 'none' (default)
-%     - 'tukey'
-%     - 'parzen'
-%     - 'bartlett'
+%         Parameter                   Value
+%          'p'                        'auto' (the default) uses automatic
+%                                     embedding, otherwise input the
+%                                     desired history length as a string
+%          'q'                        'auto' (the default) uses automatic
+%                                     embedding, otherwise input the
+%                                     desired history length as a string
+%          'test'                     'exact' (default) uses a
+%                                     Bartlett-corrected Student's t-test,
+%                                     'standard' uses the typical two-tail
+%                                     t-test.
+%          'surrogates'               Numeric denoting the number of
+%                                     surrogates used in generating the
+%                                     exact null distributions.
+%          'varianceEstimator'        'bartlett' (default) uses Bartlett's
+%                                     formula assuming no
+%                                     cross-correlations, 'roy' makes no
+%                                     assumptions about cross-correlations.
+%          'taperMethod'              'none' (default) to compute
+%                                     sample autocorrelations without
+%                                     tapering, 'tukey' to use the Tukey
+%                                     windowing, 'parzen' for Parzen
+%                                     windows, or 'bartlett' to use
+%                                     Barttlett's correction. 
+%          'multivariateBartlett'     False (default) to assume all pairs
+%                                     of correlations are independent, and
+%                                     true to Bartlett correct for full
+%                                     covariance matrix.
 %
 %   Example:
 %     % Compute the Granger causality from Y to X and obtain the LR test p-value
@@ -33,7 +51,7 @@ function [F,stats] = mvgc(X,Y,W,embedding,taper_method_str)
 %     pval_LR = significance(F,stats,'lr');
 %     pval_exact = significance(F,stats,'exact');
 %
-%   See also <a href="matlab:help significance">significance</a>, <a href="matlab:help order">order</a>, <a href="matlab:help mvmi">mvmi</a>, <a href="matlab:help pcd">pcd</a>
+%   See also <a href="matlab:help order">order</a>, <a href="matlab:help mvmi">mvmi</a>, <a href="matlab:help pcd">pcd</a>
 
 % ------------------------------------------------------------------------------
 % Copyright (C) 2020, Oliver M. Cliff <oliver.m.cliff@gmail.com>,
@@ -58,40 +76,41 @@ function [F,stats] = mvgc(X,Y,W,embedding,taper_method_str)
 % this program. If not, see <http://www.gnu.org/licenses/>.
 % ------------------------------------------------------------------------------
 
-if nargin < 3
-  W = [];
-end
+parser = inputParser;
 
-if nargin < 4
-  embedding = [-1 -1]; % optimal embedding
+isnumericMatrix = @(x) (isnumeric(x) && ismatrix(x));
+
+addRequired(parser,'X',isnumericMatrix);
+addRequired(parser,'Y',isnumericMatrix);
+addOptional(parser,'W',[],isnumericMatrix);
+addOptional(parser,'p','auto',@isstring);
+addOptional(parser,'q','auto',@isstring);
+
+optionals = {'W','p','q'};
+
+parser = parseParameters(parser,optionals,X,Y,varargin{:});
+
+optionals_used = 1;
+for i = 1:legnth(optionals)
+  optionals_used = optionals_used + contains(parser.UsingDefaults,optionals{i});
 end
-if nargin < 5
-  taper_method_str = 'none';
-end
+params = varargin(optionals_used:end);
 
 % Embedding (i.e., history length)
-if embedding(1) < 0
-  %   <0: optimal embedding,
+if strcmp(parser.Results.p,'auto')
   p = order(X);
-  
-elseif embedding(1) == 0
-  %   ==0: 1st-order AR embedding (p=q=1),
-  p = 1;
-else
-  %   >0: set predictee and predictor embedding to value (p=q=embedding),
-  p = embedding(1);
+else 
+  p = str2double(parser.Results.p);
 end
 
-if embedding(2) < 0
-  q = order(Y);
-elseif embedding(2) == 0
-  q = 1;
-else
-  q = embedding(2);
+if strcmp(parser.Results.q,'auto')
+  q = order(X);
+else 
+  q = str2double(parser.Results.q);
 end
 
 % Embed the vectors for input to CMI calculator
-[Xf,Yp,Xp,Wp] = embed(X,Y,p,q,W);
+[Xf,Yp,Xp,Wp] = embed(X,Y,p,q,parser.Results.W);
 
 % Add any conditional matrix
 if isempty(Wp)
@@ -101,13 +120,19 @@ else
 end
 
 % Calculate CMI (also returning structure for computing significance)
-[cmi,stats] = mvmi(Xf,Yp,XpW,taper_method_str);
+if nargout > 1
+  if nargout > 2
+    [cmi,pval,dist,stats] = mvmi(Xf,Yp,XpW,params{:});
+    stats.p = p;
+    stats.q = q;
+    stats.to_cmi = @(x) 2*x;
+  else
+    [cmi,pval] = mvmi(Xf,Yp,XpW,params{:});
+  end
+  
+else
+  cmi = mvmi(Xf,Yp,XpW,params{:});
+end
 F = 2*cmi;
-
-% How to convert GC to CMI for significance calcs
-stats.to_cmi = @(x) 0.5*x;
-
-stats.p = p;
-stats.q = q;
 
 end

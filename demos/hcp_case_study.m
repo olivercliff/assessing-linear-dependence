@@ -85,7 +85,10 @@ end
 % - 3: GC, optimal embedding
 % - 4: GC, high embedding
 % - 5: GC with MV dim 2 (not in paper)
-which_test = 4;
+which_test = 6;
+
+% Do you want to use the F-test or the asymptotic LR (chi^2) test 
+f_test = true;
 
 switch which_test
   case 1
@@ -100,12 +103,22 @@ switch which_test
     dims = 1; % 1D
   case 4
     is_granger = true; % GC
-    embedding = [100 100]; % Overly optimistic (pesimistic?) embedding
+    embedding = [100 100]; % Overly optimistic (pessimistic?) embedding
     dims = 1; % 1D
   case 5
     is_granger = true; % GC
     embedding = [-1 1]; % auto-embedding
     dims = 2; % 1D
+  case 6
+    is_granger = true; % GC
+    embedding = [-1 1]; % auto-embedding
+    dims = 1; % 1D
+end
+
+if f_test && dims > 1
+  warning(['No known finite-sample distribution for ',...
+            'F-tests with multivariate models. Using LR test instead.']);
+  f_test = true;
 end
 
 %% Default params
@@ -114,7 +127,7 @@ seed = 1; % Used for the paper
 generate_tikz = false;
 
 R = 1000; % Number of trials
-S = 5000; % MC sample size
+surrogates = 5000; % MC sample size
 alpha = 0.05; % Significance level
 seq = 201:1000; % Sequence of the data to take (cut off first+last 200)
 
@@ -191,13 +204,12 @@ for r = 1:R
   
   % Compute our measures
   if is_granger
-    [measure(r),dist] = mvgc(X,Y,W,embedding,'none');
+    [measure(r),pvals_E(r)] = mvgc(X,Y,W,'test','exact','surrogates',surrogates);
+    [~,pvals_LR(r)] = mvgc(X,Y,W,'test','asymptotic');
   else
-    [measure(r),dist] = mvmi(X,Y,W,'none');
+    [measure(r),pvals_E(r)] = mvmi(X,Y,W,'test','exact','surrogates',surrogates);
+    [measure(r),pvals_LR(r)] = mvmi(X,Y,W,'test','asymptotic');
   end
-  
-  pvals_LR(r) = significance(measure(r), dist, 'lr');
-  pvals_E(r) = significance(measure(r), dist, 'exact',S);
   
   if verbose
     if mod(r,10) == 0
@@ -215,7 +227,12 @@ hold on;
 plot([0 1], [0 1], 'k:');
 ph1 = plot(sort(pvals_LR),linspace(0,1,R), '-', 'color', col_LR, 'linewidth', 1);
 ph2 = plot(sort(pvals_E),linspace(0,1,R), '-', 'color', col_E, 'linewidth', 1);
-legend([ph1 ph2],'LR test', 'Exact test','location', 'best');
+
+if f_test
+  legend([ph1 ph2],'Standard F-test', 'Exact test','location', 'best');
+else
+  legend([ph1 ph2],'LR test', 'Exact test','location', 'best');
+end
 
 fprintf('LR test FPR at %.2f: %.3g\n', alpha, mean(pvals_LR <= alpha) );
 fprintf('Exact test FPR at %.2f: %.3g\n', alpha, mean(pvals_E <= alpha) );

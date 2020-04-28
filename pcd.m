@@ -1,4 +1,4 @@
-function [pr,eta,cs] = pcd(X,Y,W,taper_method_str,mv_correction)
+function [pr,eta,cs] = pcd(X,Y,varargin)
 %PCD Partial correlation decomposition for vector AR processes.
 %   R = PCD(X,Y) returns the KL-by-1 vector of the partial correlation
 %   decomposition between the N-by-K matrix X and the N-by-L matrix
@@ -15,19 +15,20 @@ function [pr,eta,cs] = pcd(X,Y,W,taper_method_str,mv_correction)
 %   specifying the dimension of the multivariate condtiional process
 %   going into each computation of R.
 %
-%   [...] = PCD(...,TAPER) optional string specifying the taper method used
-%   for inferring the autocorrelation function for Bartlett''s formula using one
-%   of the following techniques:
-%     - 'none' (default)
-%     - 'tukey'
-%     - 'parzen'
-%     - 'bartlett'
+%   [...] = PC(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies additional
+%   parameters and their values.  Valid parameters are the following:
 %
-%   [...] = PCD(...,BARTLETT) optional logical specifying whether to use
-%   the multivariate version of Bartlett''s formula. false (default) means
-%   use the original formula and true means use Roy''s multivariate formula.
-%   The latter is only useful for partial correlations but there is no significance
-%   testing set up for it yet.
+%         Parameter                   Value
+%          'taperMethod'              'none' (default) to compute
+%                                     sample autocorrelations without
+%                                     tapering, 'tukey' to use the Tukey
+%                                     windowing, 'parzen' for Parzen
+%                                     windows, or 'bartlett' to use
+%                                     Barttlett's correction. 
+%          'multivariateBartlett'     False (default) to assume all pairs
+%                                     of correlations are independent, and
+%                                     true to Bartlett correct for full
+%                                     covariance matrix.
 %
 %   See also <a href="matlab:help mvmi">mvmi</a>, <a href="matlab:help mvgc">mvgc</a>, <a href="matlab:help significance">significance</a>
 
@@ -54,27 +55,23 @@ function [pr,eta,cs] = pcd(X,Y,W,taper_method_str,mv_correction)
 % this program. If not, see <http://www.gnu.org/licenses/>.
 % ------------------------------------------------------------------------------
 
-if nargin < 3
-  W = [];
-end
+parser = inputParser;
 
-if nargin < 4
-  taper = 0;
-else
-  switch taper_method_str
-    case 'none'
-      taper = 0;
-    case 'tukey'
-      taper = 1;
-    case 'parzen'
-      taper = 2;
-    case 'bartlett'
-      taper = 3;
-  end
-end
+addRequired(parser,'X',@isnumeric);
+addRequired(parser,'Y',@isnumeric);
+addOptional(parser,'W',[],@isnumeric);
 
-if nargin < 5
-  mv_correction = false;
+parser = parseParameters(parser,X,Y,varargin{:});
+
+switch parser.Results.taperMethod
+  case 'none'
+    taper = 0;
+  case 'tukey'
+    taper = 1;
+  case 'parzen'
+    taper = 2;
+  case 'bartlett'
+    taper = 3;
 end
 
 T = size(X,1); % Dataset length
@@ -91,7 +88,7 @@ for j = 1:k
     ij = ((j-1)*l)+i;
     
     Y_i = Y(:,i);
-    C_ij = [W,Y(:,1:i-1),X(:,1:j-1)];
+    C_ij = [parser.Results.W,Y(:,1:i-1),X(:,1:j-1)];
 
     % Compute and store residuals
     eXjZ = X_j - C_ij*(C_ij\X_j);
@@ -109,4 +106,4 @@ for j = 1:k
 end
 
 % Compute Bartlett corrections here so we don't have to pass back the residuals
-eta = bartlett(all_resids,taper,mv_correction);
+eta = bartlett(all_resids,taper,parser.Results.multivariateBartlett);

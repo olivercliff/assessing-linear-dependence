@@ -65,10 +65,10 @@ if strcmp(parser.Results.test,'asymptotic') || strcmp(parser.Results.test,'stand
   if stat.cmi
     % LR statistic is 2 * nested log ratio * numer of samples (removed the
     % order of autoregression)
-    stat = 2*stat.to_cmi(estimate);
+    estimate = 2*stat.to_cmi(estimate);
 
     % Get p-value from quantile function of chi-squared dist
-    pval = 1-chi2cdf(stat*stat.N_o,stat.dof);
+    pval = 1-chi2cdf(estimate*stat.N_o,stat.dof);
 
     if nargout > 1
       dist = chi2inv(linspace(0,1,S),stat.dof)./stat.N_o;
@@ -131,10 +131,10 @@ elseif strcmp(parser.Results.test,'exact')
     f_rvs = t_rvs.^2;
     logf_rvs = log(f_rvs./stat.d_2'+1);
     dist = sum(logf_rvs,2);
-    stat = 2*stat.to_cmi(estimate);
+    estimate = 2*stat.to_cmi(estimate);
     
     % Proportion of surrogates less than statistic
-    pval = mean( stat <= dist );
+    pval = mean( estimate <= dist );
     
     if nargout > 1
       dist = sort(dist);

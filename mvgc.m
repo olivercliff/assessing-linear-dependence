@@ -83,18 +83,13 @@ isnumericMatrix = @(x) (isnumeric(x) && ismatrix(x));
 addRequired(parser,'X',isnumericMatrix);
 addRequired(parser,'Y',isnumericMatrix);
 addOptional(parser,'W',[],isnumericMatrix);
-addOptional(parser,'p','auto',@isstring);
-addOptional(parser,'q','auto',@isstring);
 
-optionals = {'W','p','q'};
+parser = parseParameters(parser,X,Y,varargin{:});
 
-parser = parseParameters(parser,optionals,X,Y,varargin{:});
-
-optionals_used = 1;
-for i = 1:legnth(optionals)
-  optionals_used = optionals_used + contains(parser.UsingDefaults,optionals{i});
+params = varargin(2:end);
+if ~contains(parser.UsingDefaults,'W')
+  params = varargin(2:end);
 end
-params = varargin(optionals_used:end);
 
 % Embedding (i.e., history length)
 if strcmp(parser.Results.p,'auto')
@@ -104,7 +99,7 @@ else
 end
 
 if strcmp(parser.Results.q,'auto')
-  q = order(X);
+  q = order(Y);
 else 
   q = str2double(parser.Results.q);
 end

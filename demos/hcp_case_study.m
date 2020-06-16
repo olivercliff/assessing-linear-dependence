@@ -85,7 +85,7 @@ end
 % - 3: GC, optimal embedding
 % - 4: GC, high embedding
 % - 5: GC with MV dim 2 (not in paper)
-which_test = 6;
+which_test = 3;
 
 % Do you want to use the F-test or the asymptotic LR (chi^2) test 
 f_test = true;
@@ -99,19 +99,23 @@ switch which_test
     dims = 2; % 2D
   case 3
     is_granger = true; % GC
-    embedding = [-1 -1]; % auto-embedding
+    config.p = 'auto';
+    config.q = 'auto';
     dims = 1; % 1D
   case 4
     is_granger = true; % GC
-    embedding = [100 100]; % Overly optimistic (pessimistic?) embedding
+    config.p = '100';
+    config.q = '100'; % Overly optimistic (pessimistic?) embedding
     dims = 1; % 1D
   case 5
     is_granger = true; % GC
-    embedding = [-1 1]; % auto-embedding
+    config.p = 'auto';
+    config.q = 'auto';
     dims = 2; % 1D
   case 6
     is_granger = true; % GC
-    embedding = [-1 1]; % auto-embedding
+    config.p = 'auto';
+    config.q = '1'; % auto-embedding
     dims = 1; % 1D
 end
 
@@ -204,8 +208,8 @@ for r = 1:R
   
   % Compute our measures
   if is_granger
-    [measure(r),pvals_E(r)] = mvgc(X,Y,W,'test','exact','surrogates',surrogates);
-    [~,pvals_LR(r)] = mvgc(X,Y,W,'test','asymptotic');
+    [measure(r),pvals_E(r)] = mvgc(X,Y,W,'p',config.p,'q',config.q,'test','exact','surrogates',surrogates);
+    [~,pvals_LR(r)] = mvgc(X,Y,W,'p',config.p,'q',config.q,'test','asymptotic');
   else
     [measure(r),pvals_E(r)] = mvmi(X,Y,W,'test','exact','surrogates',surrogates);
     [measure(r),pvals_LR(r)] = mvmi(X,Y,W,'test','asymptotic');

@@ -8,6 +8,8 @@
 
 %% Configure
 
+addpath ..
+
 causal = false; % Causal influence from Y to X
 lag = 10; % Which lag is this influence at?
 
@@ -94,6 +96,8 @@ quantsm = zeros(2*M-1,2);
 %% Compute cross-correlations
 
 S = 1000;
+upper_quant_id = round((1-alpha/2)*S);
+lower_quant_id = round(alpha/2*S);
 
 lag_seq = 1:2*M-1;
 for u = lag_seq
@@ -113,12 +117,12 @@ for u = lag_seq
   % Get our correlation implementation
   [C(u),pval(u),cdist,stat] = pcorr(cX,cY,'surrogates',S);
   lags(u) = m;
-  quants(u,1) = cdist(round(0.975*S));
-  quants(u,2) = cdist(round(0.025*S));
+  quants(u,1) = cdist(upper_quant_id);
+  quants(u,2) = cdist(lower_quant_id);
   
   [~,cdistm] = significance(C(u),stat,'surrogates',S,'test','standard');
-  quantsm(u,1) = cdistm(round(0.975*S));
-  quantsm(u,2) = cdistm(round(0.025*S));
+  quantsm(u,1) = cdistm(upper_quant_id);
+  quantsm(u,2) = cdistm(lower_quant_id);
   
   % Get MATLAB's correlation implementation
   [Cm(u),pvalm(u)] = corr(cX,cY);

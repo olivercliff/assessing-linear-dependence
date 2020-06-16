@@ -31,30 +31,29 @@ if ~exist('mvgc.m','file')
 end
 
 %% Reproduce a figure from the paper? Else choose the params below
-figure_opts = {'2a','2b';
+figure_opts = {'1a','1b';
+               '2a','2b';
                '3a','3b';
                '4a','4b';
                '5a','5b';
                '6a','6b';
-               '7a','7b';
-               '8a','8b'};
+               '7a','7b'};
 
 % Select from figure_opts or choose 'na' or any other string that is
 % not in list to select your own params below
-% which_figure = '3a';
-which_figure = '';
+which_figure = '6a';
 fig_id = strcmp(figure_opts,which_figure);
 
 verbose = true;
 
-% Is the input a valid figure (2a-8b)...?
 if any(fig_id(:))
-  fprintf('You chose Fig. %s\n', which_figure);
+  % Is the input a valid figure (2a-8b)...?
+  
   [fig,subfig] = find(fig_id);
   config = get_configuration(fig,subfig);
-% ...or does user want to choose their own settings.
 else
-  fprintf('You selected %s, using the following params:\n', which_figure);
+  % ...or does user want to choose their own settings.
+
   config.T = 2^9; % Dataset length
   config.R = 100; % Number of runs/trials
   config.S = 1000; % Number of samples for MC distribution
@@ -69,27 +68,27 @@ else
   config.causal = false; % Non-causal (null model, should we be testing true negatives or false positives?)
 
   config.is_granger = false; % Granger causality (not CMI)
-  config.is_cmi = false; % Granger causality (not CMI)
   config.p = 'auto'; % Optimal embedding, set to numeric for a specific embedding
   config.q = 'auto';
 
   config.alpha = 0.05; % significance level
 
   config.seed = now; % RNG seed
-
-  disp(config);
 end
 
+fprintf('You selected %s, using the following params:\n', which_figure);
+disp(config);
+
 % Use standard F-tests or the asymptotic LR tests
-config.f_test = true;
+config.f_test = false;
 
 %% Set up filters and simulator
 
-if ~config.is_cmi
-  compute_measure = @(X,Y,W,varargin) mvcorr(X,Y,W,varargin{:});
+if config.is_pc
+  compute_measure = @(X,Y,W,varargin) pcorr(X,Y,W,varargin{:});
 else
   if config.is_granger
-    compute_measure = @(X,Y,W,varargin) mvgc(X,Y,W,varargin{:});
+    compute_measure = @(X,Y,W,varargin) mvgc(X,Y,W,'p',config.p,'q',config.q,varargin{:});
   else
     compute_measure = @(X,Y,W,varargin) mvmi(X,Y,W,varargin{:});
   end
@@ -183,8 +182,8 @@ for r = 1:config.R
   end
 
   % Compute measure (GC or MI)
-  [measure(r),pvals_E(r),~,stats] = compute_measure(X,Y,W,'test','exact');
-  pvals_LR(r) = significance(measure(r),stats,'test','asymptotic');
+  [measure(r),pvals_E(r)] = compute_measure(X,Y,W,'test','exact');
+  [~,pvals_LR(r),] = compute_measure(X,Y,W,'test','asymptotic');
   
   if verbose
     if mod(r,10) == 0

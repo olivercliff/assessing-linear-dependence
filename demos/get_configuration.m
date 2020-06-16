@@ -71,5 +71,5 @@ function config = get_configuration(fig,subfig)
       config.dim_W = 0;
   end
   
-  config.is_cmi = true;
+  config.is_pc = false;
 end

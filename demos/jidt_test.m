@@ -57,9 +57,9 @@ switch test_id
 end
 
 if test_id < 4
-  compute_measure = @(X,Y,W) mvmi(X,Y,W,'none');
+  compute_measure = @(X,Y,W) mvmi(X,Y,W,'test','asymptotic');
 else
-  compute_measure = @(X,Y,W) mvgc(X,Y,W,[-1 -1],'none');
+  compute_measure = @(X,Y,W) mvgc(X,Y,W,'p','auto','q','auto','test','asymptotic');
 end
 
 %% Set up variables and generate random samples
@@ -100,8 +100,8 @@ W = Z(p_W,:)';
 %% Obtain measurements and p-values
 
 % From our code..
-[measure,stats] = compute_measure(X,Y,W);
-pval = significance(measure,stats,'lr');
+[measure,pval,~,stats] = compute_measure(X,Y,W);
+pval2 = significance(measure,stats,'test','asymptotic');
 
 % ...and JIDT
 switch test_id

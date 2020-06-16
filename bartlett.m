@@ -46,8 +46,8 @@ c = 3; d = 4;
 sig = zeros(4,1);
 xc = zeros(2*N-1,4,4);
 for i = 1:dim
-  A = Z(:,i,1);
-  B = Z(:,i,2);
+  A = zscore(Z(:,i,1));
+  B = zscore(Z(:,i,2));
   
   if full
     sig(a) = std(A);

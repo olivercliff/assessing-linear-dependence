@@ -47,9 +47,8 @@ function [F,pval,dist,stats] = mvgc(X,Y,varargin)
 %     % and the exact test p-value.
 %     X = randn(100,5);
 %     Y = randn(100,3);
-%     [F,stats] = MVGC(X,Y);
-%     pval_LR = significance(F,stats,'lr');
-%     pval_exact = significance(F,stats,'exact');
+%     [F,pval_exact] = MVGC(X,Y);
+%     [F,pval_LR] = MVGC(X,Y,'test','standard');
 %
 %   See also <a href="matlab:help order">order</a>, <a href="matlab:help mvmi">mvmi</a>, <a href="matlab:help pcd">pcd</a>
 

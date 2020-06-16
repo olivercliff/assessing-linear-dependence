@@ -86,7 +86,7 @@ addOptional(parser,'W',[],isnumericMatrix);
 
 parser = parseParameters(parser,X,Y,varargin{:});
 
-params = varargin(2:end);
+params = varargin;
 if ~contains(parser.UsingDefaults,'W')
   params = varargin(2:end);
 end

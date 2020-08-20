@@ -106,6 +106,7 @@ function config = get_configuration(fig,subfig,exp)
       config.is_granger = true;
       config.p = 'auto';
       config.q = '1';
+      config.filter_order = 8;
       
       config.dim_X = 3;
       config.dim_Y = 3;

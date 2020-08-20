@@ -1,4 +1,15 @@
-function [v,V] = bartlett(Z,taper,full)
+function [v,V] = bartlett(Z,taper_method,full)
+
+switch taper_method
+  case 'none'
+    taper = 0;
+  case 'tukey'
+    taper = 1;
+  case 'parzen'
+    taper = 2;
+  case 'bartlett'
+    taper = 3;
+end
 
 if nargin < 3
   full = false;

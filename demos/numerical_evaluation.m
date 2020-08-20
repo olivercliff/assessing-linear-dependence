@@ -1,7 +1,9 @@
-% NUMERICAL_EVALUATION   Runs the simulations for all numerical evalution from the paper.
+function numerical_evaluation(figure_or_config,which_exp,output_file,plot_results)
+
+% NUMERICAL_EVALUATION   Runs simulations of all numerical evalutions from our paper.
 
 % ------------------------------------------------------------------------------
-% Copyright (C) 2020, Oliver M. Cliff <oliver.m.cliff@gmail.com>,
+% Copyright (C) 2020, Oliver M. Cliff <oliver.m.cliff@gmail.com>
 %
 % If you use this code for your research, please cite the following paper:
 %
@@ -23,66 +25,59 @@
 % this program. If not, see <http://www.gnu.org/licenses/>.
 % ------------------------------------------------------------------------------
 
-clear
-close all
-
 if ~exist('mvgc.m','file')
   addpath('..');
+  addpath('../utils/');
 end
 
-%% Reproduce a figure from the paper? Else choose the params below
-figure_opts = {'1a','1b';
-               '2a','2b';
-               '3a','3b';
-               '4a','4b';
-               '5a','5b';
-               '6a','6b';
-               '7a','7b'};
+if nargin < 4
+  plot_results = true;
+  if nargin < 3
+    output_file = [];
+    if nargin < 2
+      which_exp = [];
+    end
+  end
+end
 
-% Select from figure_opts or choose 'na' or any other string that is
-% not in list to select your own params below
-which_figure = '6a';
-fig_id = strcmp(figure_opts,which_figure);
+%% Reproduce a figure from the paper? Else, choose the params below
 
-verbose = true;
+if ischar(figure_or_config)
+  figure_opts = {'1a','1b';
+                 '2a','2b';
+                 '3a','3b';
+                 '4a','4b';
+                 '5a','5b';
+                 '6a','6b';
+                 '7a','7b'};
 
-if any(fig_id(:))
-  % Is the input a valid figure (2a-8b)...?
+  % Select from figure_opts or choose 'na' or any other string that is
+  % not in list to select your own params below
+  % which_figure = '5b';
+  fig_id = strcmp(figure_opts,figure_or_config);
+
+  verbose = true;
+
+  if any(fig_id(:))
+    % Is the input a valid figure (1a-7b)...?
+    [fig,subfig] = find(fig_id);
+    config = get_configuration(fig,subfig,which_exp);
+  end
   
-  [fig,subfig] = find(fig_id);
-  config = get_configuration(fig,subfig);
+  fprintf('Performing numerical simulations from Fig. %s.\n', figure_or_config);
+elseif isstruct(figure_or_config)
+  config = figure_or_config;
+  fprintf('User-supplied configuration.\n');
 else
-  % ...or does user want to choose their own settings.
-
-  config.T = 2^9; % Dataset length
-  config.R = 100; % Number of runs/trials
-  config.S = 1000; % Number of samples for MC distribution
-  config.dim_X = 1; % set X dimension
-  config.dim_Y = 1; % set Y dimension
-  config.dim_W = 0; % set W dimension
-
-  config.to_filter = 2; % None=0, FIR=1, IIR=2
-  config.filter_order = 8; % 8th order
-  config.ar = true; % Include the AR parameters (or use IID, false)
-
-  config.causal = false; % Non-causal (null model, should we be testing true negatives or false positives?)
-
-  config.is_granger = false; % Granger causality (not CMI)
-  config.p = 'auto'; % Optimal embedding, set to numeric for a specific embedding
-  config.q = 'auto';
-
-  config.alpha = 0.05; % significance level
-
-  config.seed = now; % RNG seed
+  fprintf('Unknown input.\n');
 end
 
-fprintf('You selected %s, using the following params:\n', which_figure);
+fprintf('Using the following params:\n');
 disp(config);
 
-% Use standard F-tests or the asymptotic LR tests
-config.f_test = false;
-
 %% Set up filters and simulator
+
+univariate = config.dim_X == 1 && config.dim_Y == 1;
 
 if config.is_pc
   compute_measure = @(X,Y,W,varargin) pcorr(X,Y,W,varargin{:});
@@ -94,15 +89,17 @@ else
   end
 end
 
-if config.to_filter == 1
-  % FIR filter
-  a_coeff = fir1(config.filter_order, 0.5);
-  b_coeff = 1;
-elseif config.to_filter == 2
-  % Butterworth (IIR) filter
-  [a_coeff, b_coeff] = butter(config.filter_order, 0.5);
+if config.filter_order > 0
+  if config.to_filter == 1
+    % FIR filter
+    b_coeff = fir1(config.filter_order, 0.5);
+    a_coeff = 1;
+  elseif config.to_filter == 2
+    % Butterworth (IIR) filter
+    [b_coeff, a_coeff] = butter(config.filter_order, 0.5);
+  end
 end
-
+  
 % Is the original signal autoregressive or spectrally white?
 if config.ar
   phi_X = 0.3 .* eye(config.dim_X);
@@ -116,7 +113,7 @@ end
 
 % Should we include a causal influence from Y to X?
 if config.causal
-  phi_XY = 0.03 .* eye(config.dim_X,config.dim_Y);
+  phi_XY = 0.2104 .* eye(config.dim_X,config.dim_Y);
 else
   phi_XY = zeros(config.dim_X,config.dim_Y);
 end
@@ -152,6 +149,26 @@ measure = zeros(config.R,1);
 pvals_LR = zeros(config.R,1); % LR test
 pvals_E = zeros(config.R,1); % exact test
 
+% Save the F-test and prewhitened results if univariate
+if univariate
+  fprintf('The simulated time series are univariate, so we have the following tests available:\n');
+  fprintf('\t1. The exact test\n');
+  fprintf('\t2a. The asymptotic LR (chi-2) test\n');
+  fprintf('\t2b. The asymptotic LR (chi-2) test [with prewhitened time series]\n');
+  fprintf('\t3a. The F-test\n');
+  fprintf('\t3b. The F-test [with prewhitened time series]\n');
+  
+  measure_pw = zeros(config.R,1);
+  
+  pvals_F = zeros(config.R,1); % F-test
+  pvals_F_pw = zeros(config.R,1); % F-test + prewhiten
+  pvals_LR_pw = zeros(config.R,1); % LR test + prewhiten
+else
+  fprintf('The simulated time series are multivariate, so we have the following tests available:\n');
+  fprintf('\t1. The exact test\n');
+  fprintf('\t2. The asymptotic LR (chi-2) test\n');
+end
+
 rng(config.seed);
 
 fprintf('Running simulations...');
@@ -175,15 +192,34 @@ for r = 1:config.R
   W = Z(p_W,:)';
 
   % Filter the data to induce higher autocorrelation (if opted)
-  if config.to_filter > 0
-    X = filter(a_coeff,b_coeff,X,[],1);
-    Y = filter(a_coeff,b_coeff,Y,[],1);
-    W = filter(a_coeff,b_coeff,W,[],1);
+  if config.to_filter > 0 && config.filter_order > 0
+    X = filter(b_coeff,a_coeff,X,[],1);
+    Y = filter(b_coeff,a_coeff,Y,[],1);
+    W = filter(b_coeff,a_coeff,W,[],1);
   end
+  
+  % Normalise the data (N.B. a column is a single time series)
+  X = detrend(zscore(X));
+  Y = detrend(zscore(Y));
+  W = detrend(zscore(W));
 
-  % Compute measure (GC or MI)
-  [measure(r),pvals_E(r)] = compute_measure(X,Y,W,'test','exact');
-  [~,pvals_LR(r),] = compute_measure(X,Y,W,'test','asymptotic');
+  % Exact test
+  [measure(r),pvals_E(r),~,stats] = compute_measure(X,Y,W,'test','exact');
+  pvals_LR(r) = significance(measure(r),stats,'test','asymptotic');
+  
+  if univariate
+    % F-test
+    pvals_F(r) = significance(measure(r),stats,'test','exact','varianceEstimator','none');
+    
+    [X_pw,Y_pw,W_pw] = prewhiten(X,Y,W);
+    
+    % Pre-whitened F-test
+    [measure_pw(r),pvals_F_pw(r),~,stats_pw] = compute_measure(X_pw,Y_pw,W_pw,'test','exact','varianceEstimator','none');
+    
+    % Pre-whitened Chi-2 test
+    pvals_LR_pw(r) = significance(measure_pw(r),stats_pw,'test','asymptotic');
+  end
+  
   
   if verbose
     if mod(r,10) == 0
@@ -191,22 +227,37 @@ for r = 1:config.R
     end
   end
 end
-  
-%% Plot results
-col_LR = [1 0 0];
-col_E = [0 0 0];
 
-figure;
-hold on;
-plot([0 1], [0 1], 'k--');
-ph1 = plot(sort(pvals_LR),linspace(0,1,config.R), '-', 'color', col_LR, 'linewidth', 1);
-ph2 = plot(sort(pvals_E),linspace(0,1,config.R), '-', 'color', col_E, 'linewidth', 1);
-
-if config.f_test
-  legend([ph1 ph2], 'Standard F-test', 'Exact test','location', 'best');
-else
-  legend([ph1 ph2], 'LR test', 'Exact test','location', 'best');
+if ~isempty(output_file)
+  if univariate
+    save(output_file,'config','pvals_E','pvals_LR','pvals_F','pvals_LR_pw','pvals_F_pw');
+  else
+    save(output_file,'config','pvals_E','pvals_LR');
+  end
 end
+  
+if plot_results
+  col_LR = [1 0 0];
+  col_E = [0 0 0];
 
-fprintf('LR test FPR at %d%% significance: %.3g\n', config.alpha*100, mean(pvals_LR <= config.alpha) );
-fprintf('Exact test FPR at %d%% significance: %.3g\n', config.alpha*100, mean(pvals_E <= config.alpha) );
+  figure;
+  hold on;
+  plot([0 1], [0 1], 'k--');
+  ph1 = plot(sort(pvals_E),linspace(0,1,config.R), '-', 'color', col_E, 'linewidth', 1);
+  ph2 = plot(sort(pvals_LR),linspace(0,1,config.R), '--', 'color', col_LR, 'linewidth', 1);
+
+  fprintf('Exact test FPR at %d%% significance: %.3g\n', config.alpha*100, mean(pvals_E <= config.alpha) );
+  fprintf('LR test FPR at %d%% significance: %.3g\n', config.alpha*100, mean(pvals_LR <= config.alpha) );
+  if univariate
+    ph4 = plot(sort(pvals_LR_pw),linspace(0,1,config.R), '-.', 'color', col_LR, 'linewidth', 1);
+    ph3 = plot(sort(pvals_F),linspace(0,1,config.R), '-', 'color', col_LR, 'linewidth', 1);
+    ph5 = plot(sort(pvals_F_pw),linspace(0,1,config.R), ':', 'color', col_LR, 'linewidth', 1);
+
+    legend([ph1 ph2 ph3 ph4 ph5], 'Exact test','LR test','PW LR test','F-test','PW F-test','location', 'best');
+    fprintf('Pre-whitened LR test FPR at %d%% significance: %.3g\n', config.alpha*100, mean(pvals_LR_pw <= config.alpha) );
+    fprintf('F-test FPR at %d%% significance: %.3g\n', config.alpha*100, mean(pvals_F <= config.alpha) );
+    fprintf('Pre-whitened F-test FPR at %d%% significance: %.3g\n', config.alpha*100, mean(pvals_F_pw <= config.alpha) );
+  else
+    legend([ph1 ph2], 'Exact test', 'LR test', 'location', 'best');
+  end
+end

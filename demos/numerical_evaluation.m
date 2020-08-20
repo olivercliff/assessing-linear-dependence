@@ -98,6 +98,8 @@ if config.filter_order > 0
     % Butterworth (IIR) filter
     [b_coeff, a_coeff] = butter(config.filter_order, 0.5);
   end
+else
+  b_coeff = nan; a_coeff = nan;
 end
   
 % Is the original signal autoregressive or spectrally white?

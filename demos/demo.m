@@ -5,7 +5,7 @@ exp = 2;
 
 if isempty(myfig)
   config.T = 2^9; % Dataset length
-  config.R = 100; % Number of runs/trials
+  config.R = 1000; % Number of runs/trials
   config.S = 1000; % Number of samples for MC distribution
   config.dim_X = 2; % set X dimension
   config.dim_Y = 2; % set Y dimension

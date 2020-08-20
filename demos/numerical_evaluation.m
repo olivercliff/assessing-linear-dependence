@@ -180,7 +180,7 @@ end
 fprintf('\n');
 
 % Run sims
-for r = 1:config.R
+parfor r = 1:config.R
   Z = Sigma*randn(M,config.T);
   for t = 2:config.T
     Z(:,t) = Phi*Z(:,t-1) + Z(:,t);

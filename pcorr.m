@@ -80,20 +80,24 @@ if ~contains(parser.UsingDefaults,'W')
   params = varargin(2:end);
 end
 
-[pr,eta,cs] = pcd(X,Y,parser.Results.W,params{:});
-
-% Outputs for computing the significance (variance estimation and number of
-% condtiionals)
-stats.eta = eta;
-stats.cs = cs;
-stats.mv = parser.Results.multivariateBartlett;
-stats.dof = length(cs);
-stats.N_o = length(X);
-stats.cmi = false;
+[pr,resids,cs] = pcd(X,Y,parser.Results.W,params{:});
 
 coeff = sum(pr);
 
 if nargout > 1
+   
+  eta = bartlett(resids,parser.Results.taperMethod,parser.Results.multivariateBartlett);
+
+  % Outputs for computing the significance (variance estimation and number of
+  % condtiionals)
+  stats.eta = eta;
+  stats.cs = cs;
+  stats.mv = parser.Results.multivariateBartlett;
+  stats.dof = length(cs);
+  stats.N_o = length(X);
+  stats.cmi = false;
+
+  coeff = sum(pr);
   
   sig = @(coeff,stats) significance(coeff,stats,params{:});
   

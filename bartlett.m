@@ -1,4 +1,4 @@
-function [v,V] = bartlett(Z,taper_method,full)
+function [v,ess] = bartlett(Z,taper_method,full)
 
 switch taper_method
   case 'none'
@@ -18,7 +18,7 @@ if nargin < 3
   end
 end
 
-% Z is a 2xMxN
+% Z is a NxMx2
 
 N = size(Z,1); % Sample size
 dim = size(Z,2); % Number of correlations
@@ -94,17 +94,18 @@ for i = 1:dim
                   + 0.5 .* rho_ab .* rho_cd .* ( xc(:,a,c).^2 + xc(:,b,c).^2 + xc(:,a,d).^2 + xc(:,b,d).^2 ) );
     end
   else
-    acA = autocorr(A,N-1); acA = acA(2:end);
-    acB = autocorr(B,N-1); acB = acB(2:end);
+    r_ii = autocorr(A,M-1); r_ii = r_ii(2:end);
+    r_jj = autocorr(B,M-1); r_jj = r_jj(2:end);
     
     % Taper the results
-    acA(is_ac_tap) = acA(is_ac_tap) .* ac_lambda_k;
-    acA(~is_ac_tap) = 0;
-    acB(is_ac_tap) = acB(is_ac_tap) .* ac_lambda_k;
-    acB(~is_ac_tap) = 0;
+    r_ii(is_ac_tap) = r_ii(is_ac_tap) .* ac_lambda_k;
+    r_ii(~is_ac_tap) = 0;
+    r_jj(is_ac_tap) = r_jj(is_ac_tap) .* ac_lambda_k;
+    r_jj(~is_ac_tap) = 0;
     
-    v(i,i) =  1 + 2*sum( (N-1:-1:1)' .*acA.*acB )/N;
+    u = 1:N-1;
+    v(i,i) = (1 + 2*sum((N-u)'.*r_ii.*r_jj) ./ N) ./ N;
   end
 end
 
-V = v / N;
+ess = 1 + 1 ./ v;

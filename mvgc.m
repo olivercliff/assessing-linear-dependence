@@ -119,7 +119,7 @@ if nargout > 1
     [cmi,pval,dist,stats] = mvmi(Xf,Yp,XpW,params{:});
     stats.p = p;
     stats.q = q;
-    stats.to_cmi = @(x) 2*x;
+    stats.to_cmi = @(x) 0.5*x;
   else
     [cmi,pval] = mvmi(Xf,Yp,XpW,params{:});
   end

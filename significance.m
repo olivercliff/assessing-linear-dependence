@@ -76,9 +76,8 @@ if strcmp(parser.Results.test,'asymptotic') || strcmp(parser.Results.test,'stand
   else
     t = estimate.*sqrt((stat.N_o-2)./(1-estimate.^2));
 
-    % Get p-value from quantile function of chi-squared dist
-    pval = 2*tcdf(-abs(t),stat.N_o-2);
-%     pval = 1 - 2*tcdf(-abs(lr),stat.N_o-2);
+    % Get p-value from quantile function of F-dist
+    pval = fcdf(t^2,1,stat.N_o-2);
     
     if nargout > 1
       dist = tinv(linspace(0,1,S),stat.N_o-2)./sqrt(stat.N_o-2);
@@ -102,21 +101,22 @@ elseif strcmp(parser.Results.test,'exact')
   end
 
   % Initial effective sample size (remove the order of autoregression)
-  stat.N_eff = stat.N_o;
+  
   
   % Bartlett-corrected effective sample size
   if correction > 0
-    stat.N_eff = stat.N_eff./diag(stat.eta);
+%     stat.d_2 = stat.N_o ./ diag(stat.var_r);
+    stat.d_2 = diag(stat.N_e);
+  else
+    stat.d_2 = stat.N_o;
   end
-  stat.N_eff = stat.N_eff - stat.cs;
+  stat.d_2 = stat.d_2 - stat.cs - 2;
 
-  if any(stat.N_eff < 1)
-    sum_lt1 = sum(stat.N_eff < 1);
-    warning('F-statistics with effective sample size less than one: %f.\n', sum_lt1);
+  if any(stat.d_2 < 50)
+    sum_lt1 = sum(stat.d_2 < 50);
+    warning('%d Effective DOF < 50 (%s).\n',...
+              sum_lt1, mat2str(stat.d_2(stat.d_2 < 50)));
   end
-  
-  % 2nd input parameter to F-distribution (or only param to Student's t)
-  stat.d_2 = stat.N_eff - 2;
   
   % Compute p-value
   if stat.cmi
@@ -140,13 +140,16 @@ elseif strcmp(parser.Results.test,'exact')
       dist = sort(dist);
     end
   else
-    % Partial correlation (sums of Student's t dist. RVs.)
-    sum_r = sum(estimate);
-    nu = sum(stat.d_2);
-    t = sum_r.*sqrt((stat.d_2)./(1-sum_r.^2));
     
-    % Get p-value analytically
-    pval = 2*tcdf(-abs(t),nu);
+    % Sum the partial correlations
+    r = estimate;
+    nu = stat.d_2;
+    
+    % Compute t-stat...
+    t = r.*sqrt((nu)./(1-r.^2));
+    
+    % ...and get p-value analytically
+    pval = fcdf(t^2,1,nu);
     
     if nargout > 1
       dist = tinv(linspace(0,1,S),stat.d_2)./sqrt(stat.d_2);

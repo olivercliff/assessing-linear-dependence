@@ -42,6 +42,8 @@ end
 
 %% Reproduce a figure from the paper? Else, choose the params below
 
+verbose = true;
+
 if ischar(figure_or_config)
   figure_opts = {'1a','1b';
                  '2a','2b';
@@ -55,8 +57,6 @@ if ischar(figure_or_config)
   % not in list to select your own params below
   % which_figure = '5b';
   fig_id = strcmp(figure_opts,figure_or_config);
-
-  verbose = true;
 
   if any(fig_id(:))
     % Is the input a valid figure (1a-7b)...?
@@ -199,9 +199,9 @@ for r = 1:config.R
   end
   
   % Normalise the data (N.B. a column is a single time series)
-  X = detrend(zscore(X));
-  Y = detrend(zscore(Y));
-  W = detrend(zscore(W));
+  X = detrend(X);
+  Y = detrend(Y);
+  W = detrend(W);
 
   % Exact test
   [measure(r),pvals_E(r),~,stats] = compute_measure(X,Y,W,'test','exact');

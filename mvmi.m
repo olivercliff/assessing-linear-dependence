@@ -85,21 +85,25 @@ if ~contains(parser.UsingDefaults,'W')
   params = varargin(2:end);
 end
 
-[pr,eta,cs] = pcd(X,Y,parser.Results.W,params{:});
-
-% Outputs for computing the significance (variance estimation and number of
-% condtiionals)
-stats.eta = eta;
-stats.cs = cs;
-stats.mv = false;
-stats.dof = length(cs);
-stats.N_o = length(X);
-stats.to_cmi = @(x) x;
-stats.cmi = true;
+[pr,resids,cs] = pcd(X,Y,parser.Results.W,params{:});
 
 cmi = -0.5*sum(log(1-pr.^2));
 
 if nargout > 1
+  
+  [var_r,N_e] = bartlett(resids,parser.Results.taperMethod,parser.Results.multivariateBartlett);
+  
+  % Outputs for computing the significance (variance estimation and number of
+  % condtiionals)
+  stats.var_r = var_r;
+  stats.N_e = N_e;
+  stats.cs = cs;
+  stats.mv = false;
+  stats.dof = length(cs);
+  stats.N_o = length(X);
+  stats.to_cmi = @(x) x;
+  stats.cmi = true;
+  
   sig = @(cmi,stats) significance(cmi,stats,params{:});
   if nargout > 2
     [pval,dist] = sig(cmi,stats);

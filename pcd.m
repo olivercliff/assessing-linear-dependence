@@ -1,4 +1,4 @@
-function [pr,eta,cs] = pcd(X,Y,varargin)
+function [pr,resids,cs] = pcd(X,Y,varargin)
 %PCD Partial correlation decomposition for vector AR processes.
 %   R = PCD(X,Y) returns the KL-by-1 vector of the partial correlation
 %   decomposition between the N-by-K matrix X and the N-by-L matrix
@@ -8,27 +8,12 @@ function [pr,eta,cs] = pcd(X,Y,varargin)
 %   R = PCD(X,Y,W,...) returns the partial correlation decomposition
 %   between X and Y conditioned on the N-by-C matrix W.
 %
-%   [R,ETA] = PCD(...) also returns the KL-by-1 vector ETA, the vector
-%   of variances for each independent partial correlation in R. 
+%   [R,RESIDS,C] = PCD(...) also returns the N-by-KL matrix RESIDS, the
+%   residual vectors for each independent partial correlation in R.
 %
-%   [R,ETA,CS] = PCD(...) also returns the KL-by-1 vector CS, the vector
+%   [R,RESIDS,CS] = PCD(...) also returns the KL-by-1 vector CS, the vector
 %   specifying the dimension of the multivariate condtiional process
 %   going into each computation of R.
-%
-%   [...] = PC(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies additional
-%   parameters and their values.  Valid parameters are the following:
-%
-%         Parameter                   Value
-%          'taperMethod'              'none' (default) to compute
-%                                     sample autocorrelations without
-%                                     tapering, 'tukey' to use the Tukey
-%                                     windowing, 'parzen' for Parzen
-%                                     windows, or 'bartlett' to use
-%                                     Barttlett's correction. 
-%          'multivariateBartlett'     False (default) to assume all pairs
-%                                     of correlations are independent, and
-%                                     true to Bartlett correct for full
-%                                     covariance matrix.
 %
 %   See also <a href="matlab:help mvmi">mvmi</a>, <a href="matlab:help mvgc">mvgc</a>, <a href="matlab:help significance">significance</a>
 
@@ -63,24 +48,16 @@ addOptional(parser,'W',[],@isnumeric);
 
 parser = parseParameters(parser,X,Y,varargin{:});
 
-switch parser.Results.taperMethod
-  case 'none'
-    taper = 0;
-  case 'tukey'
-    taper = 1;
-  case 'parzen'
-    taper = 2;
-  case 'bartlett'
-    taper = 3;
-end
-
 T = size(X,1); % Dataset length
 k = size(X,2); % Dimension of X
 l = size(Y,2); % Dimension of Y
 
-all_resids = zeros(T,k*l,2);
+resids = zeros(T,k*l,2);
 pr = zeros(k*l,1); % Partial correlations
 cs = zeros(k*l,1); % Number of conditionals
+
+% Concomittant variable
+W = parser.Results.W;
 
 for j = 1:k
   X_j = X(:,j);
@@ -88,22 +65,18 @@ for j = 1:k
     ij = ((j-1)*l)+i;
     
     Y_i = Y(:,i);
-    C_ij = [parser.Results.W,Y(:,1:i-1),X(:,1:j-1)];
+    
+    XjYi = [X_j Y_i];
+    C_ij = [ones(T,1), W, Y(:,1:i-1), X(:,1:j-1)];
 
     % Compute and store residuals
-    eXjZ = X_j - C_ij*(C_ij\X_j);
-    eYiZ = Y_i - C_ij*(C_ij\Y_i);
-    
-    all_resids(:,ij,1) = eXjZ;
-    all_resids(:,ij,2) = eYiZ;
+    eXYjZ = XjYi - C_ij*(C_ij\XjYi);
+    resids(:,ij,:) = eXYjZ;
 
-    % Parcorrs are correlation b/w residuals
-    pr(ij) = corr(eXjZ,eYiZ);
+    % Compute parcorr from a correlation b/w residuals
+    pr(ij) = corr(eXYjZ(:,1),eXYjZ(:,2));
     
-    % Number of conditions
-    cs(ij) = size(C_ij,2);
+    % Number of conditions (exclude intercept)
+    cs(ij) = size(C_ij,2)-1;
   end
 end
-
-% Compute Bartlett corrections here so we don't have to pass back the residuals
-eta = bartlett(all_resids,taper,parser.Results.multivariateBartlett);

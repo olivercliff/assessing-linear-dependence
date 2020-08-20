@@ -46,7 +46,7 @@ end
 
 % Should we include a causal influence from Y to X?
 if causal
-  phi_XY = 0.25 .* eye(dim_X,dim_Y);
+  phi_XY = 0.25;
 else
   phi_XY = 0;
 end

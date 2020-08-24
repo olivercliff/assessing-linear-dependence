@@ -130,7 +130,7 @@ function config = get_configuration(fig,subfig,exp)
       if isempty(exp)
         config.T = 2^9;
       else
-        config.T = 2^(4+exp);
+        config.T = 2^(5+2*exp);
       end
     case 10
       config.is_granger = true;
@@ -146,7 +146,7 @@ function config = get_configuration(fig,subfig,exp)
       if isempty(exp)
         config.T = 2^9;
       else
-        config.T = 2^(4+exp);
+        config.T = 2^(5+2*exp);
       end
   end
   

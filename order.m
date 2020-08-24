@@ -1,4 +1,4 @@
-function p = order(X)
+function p = order(X,numLags)
 %EMBED Embed the past of vector AR process.
 %   P = ORDER(X) returns the optimal AR order P of the the N-by-K matrix X
 %   using the first partial autocorrelation that is less than 1.96/sqrt(N) or
@@ -42,15 +42,33 @@ function p = order(X)
 
 T = size(X,1);
 D = size(X,2);
-M = round(T/3);
+
+if nargin == 1
+  numLags = round(T/3);
+end
 
 ps = zeros(D,1);
 for i = 1:D
-  cp = find(abs(parcorr(X(:,i),M)) < 1.96./sqrt(T),1);
+  cp = [];
+  
+  alpha = [1;zeros(numLags,1)];
+  
+  lagX = lagmatrix(X,1:numLags);
+  
+  for k = 1:numLags
+    [Q,R] = qr([ones((length(X)-k),1)  lagX(k+1:end,1:k)],0);
+    b = R\(Q'*X(k+1:end));
+    alpha(k+1) = b(end);
+    
+    if abs(alpha(k+1)) <= 1.96/sqrt(T-k)
+      cp = k;
+      break;
+    end
+  end
   if isempty(cp)
-    ps(i) = M;
+    ps(i) = numLags;
   else
-    ps(i) = cp - 2;
+    ps(i) = cp;
   end
 end
 p = max(ps);

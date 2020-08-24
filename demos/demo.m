@@ -1,14 +1,14 @@
 
 % Choose settings from the paper (or '' for your own custom configuration)
-myfig = '';
-exp = 2;
+myfig = '7a';
+exp = 1;
 
 if isempty(myfig)
   config.T = 2^9; % Dataset length
   config.R = 1000; % Number of runs/trials
   config.S = 1000; % Number of samples for MC distribution
-  config.dim_X = 2; % set X dimension
-  config.dim_Y = 2; % set Y dimension
+  config.dim_X = 1; % set X dimension
+  config.dim_Y = 1; % set Y dimension
   config.dim_W = 0; % set W dimension
 
   config.to_filter = 2; % None=0, FIR=1, IIR=2
@@ -19,7 +19,7 @@ if isempty(myfig)
 
   config.is_granger = true; % Granger causality (not CMI)
   config.p = 'auto'; % Optimal embedding, set to numeric for a specific embedding
-  config.q = '1';
+  config.q = 'auto';
 
   config.is_pc = false;
 

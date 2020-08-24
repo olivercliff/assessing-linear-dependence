@@ -86,10 +86,11 @@ coeff = sum(pr);
 
 if nargout > 1
    
-  eta = bartlett(resids,parser.Results.taperMethod,parser.Results.multivariateBartlett);
+  [eta,ess] = bartlett(resids,parser.Results.taperMethod,parser.Results.multivariateBartlett);
 
   % Outputs for computing the significance (variance estimation and number of
   % condtiionals)
+  stats.N_e = ess;
   stats.eta = eta;
   stats.cs = cs;
   stats.mv = parser.Results.multivariateBartlett;

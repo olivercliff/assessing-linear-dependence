@@ -53,9 +53,9 @@ for i = 1:D
   
   alpha = [1;zeros(numLags,1)];
   
-  lagX = lagmatrix(X,1:numLags);
-  
   for k = 1:numLags
+    lagX = lagmatrix(X,1:k+1);
+    
     [Q,R] = qr([ones((length(X)-k),1)  lagX(k+1:end,1:k)],0);
     b = R\(Q'*X(k+1:end));
     alpha(k+1) = b(end);

@@ -119,6 +119,35 @@ function config = get_configuration(fig,subfig,exp)
         config.dim_X = dims(exp);
         config.dim_Y = dims(exp);
       end
+    case 9
+      config.is_granger = false;
+      config.filter_order = 8;
+      
+      config.dim_X = 1;
+      config.dim_Y = 1;
+      config.dim_W = 0;
+      
+      if isempty(exp)
+        config.T = 2^9;
+      else
+        config.T = 2^(4+exp);
+      end
+    case 10
+      config.is_granger = true;
+      config.filter_order = 8;
+      
+      config.p = 'auto';
+      config.q = 'auto';
+      
+      config.dim_X = 1;
+      config.dim_Y = 1;
+      config.dim_W = 0;
+      
+      if isempty(exp)
+        config.T = 2^9;
+      else
+        config.T = 2^(4+exp);
+      end
   end
   
   config.is_pc = false;

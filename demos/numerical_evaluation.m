@@ -51,7 +51,9 @@ if ischar(figure_or_config)
                  '4a','4b';
                  '5a','5b';
                  '6a','6b';
-                 '7a','7b'};
+                 '7a','7b';
+                 '8a','8b';
+                 '9a','9b'};
 
   % Select from figure_opts or choose 'na' or any other string that is
   % not in list to select your own params below
@@ -221,7 +223,6 @@ parfor r = 1:config.R
     % Pre-whitened Chi-2 test
     pvals_LR_pw(r) = significance(measure_pw(r),stats_pw,'test','asymptotic');
   end
-  
   
   if verbose
     if mod(r,10) == 0

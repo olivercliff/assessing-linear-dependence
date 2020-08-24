@@ -1,4 +1,4 @@
-function numerical_evaluation(figure_or_config,which_exp,output_file,plot_results)
+function numerical_evaluation(figure_or_config,which_exp,output_file,plot_results,parallel)
 
 % NUMERICAL_EVALUATION   Runs simulations of all numerical evalutions from our paper.
 
@@ -183,8 +183,14 @@ else
 end
 fprintf('\n');
 
+if ~parallel
+  parforargs = 0;
+else
+  parforargs = inf;
+end
+
 % Run sims
-parfor r = 1:config.R
+parfor (r = 1:config.R, parforargs)
   Z = Sigma*randn(M,config.T);
   for t = 2:config.T
     Z(:,t) = Phi*Z(:,t-1) + Z(:,t);

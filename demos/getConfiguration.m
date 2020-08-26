@@ -32,6 +32,8 @@ function config = get_configuration(fig,subfig,exp)
       config.dim_Y = 1; % set Y dimension
       config.dim_W = 0; % set W dimension
       
+      config.whiten = true;
+      
       if isempty(exp)
         config.filter_order = 8;
       else
@@ -44,6 +46,8 @@ function config = get_configuration(fig,subfig,exp)
       config.dim_Y = 1;
       config.dim_W = 1;
       
+      config.whiten = true;
+      
       if isempty(exp)
         config.filter_order = 8;
       else
@@ -54,7 +58,10 @@ function config = get_configuration(fig,subfig,exp)
       
       config.dim_X = 1;
       config.dim_Y = 1;
+      
       config.filter_order = 8;
+      
+      config.whiten = true;
       
       if isempty(exp)
         config.dim_W = 100;
@@ -65,7 +72,10 @@ function config = get_configuration(fig,subfig,exp)
       config.is_granger = false;
       
       config.dim_W = 0;
+      
       config.filter_order = 8;
+      
+      config.whiten = false;
       
       if isempty(exp)
         config.dim_X = 3;
@@ -76,12 +86,15 @@ function config = get_configuration(fig,subfig,exp)
       end
     case 6
       config.is_granger = true;
+      
       config.p = 'auto';
       config.q = 'auto';
       
       config.dim_X = 1;
       config.dim_Y = 1;
       config.dim_W = 0;
+      
+      config.whiten = true;
       
       if isempty(exp)
         config.filter_order = 8;
@@ -90,12 +103,16 @@ function config = get_configuration(fig,subfig,exp)
       end
     case 7
       config.is_granger = true;
+      
       config.p = 'auto';
+      
       config.filter_order = 8;
       
       config.dim_X = 1;
       config.dim_Y = 1;
       config.dim_W = 0;
+      
+      config.whiten = true;
       
       if isempty(exp)
         config.q = '20';
@@ -107,6 +124,7 @@ function config = get_configuration(fig,subfig,exp)
       config.p = 'auto';
       config.q = '1';
       config.filter_order = 8;
+      config.whiten = false;
       
       config.dim_X = 3;
       config.dim_Y = 3;
@@ -122,6 +140,7 @@ function config = get_configuration(fig,subfig,exp)
     case 9
       config.is_granger = false;
       config.filter_order = 8;
+      config.whiten = false;
       
       config.dim_X = 1;
       config.dim_Y = 1;
@@ -134,7 +153,10 @@ function config = get_configuration(fig,subfig,exp)
       end
     case 10
       config.is_granger = true;
+      
       config.filter_order = 8;
+      
+      config.whiten = false;
       
       config.p = 'auto';
       config.q = 'auto';

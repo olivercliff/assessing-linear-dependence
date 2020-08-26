@@ -1,7 +1,7 @@
 
 % Choose settings from the paper (or '' for your own custom configuration)
-myfig = '8a';
-exp = 4;
+myfig = '8b';
+exp = 8;
 
 if isempty(myfig)
   config.T = 2^9; % Dataset length
@@ -26,8 +26,9 @@ if isempty(myfig)
   config.alpha = 0.05; % significance level
 
   config.seed = now; % RNG seed
-  numerical_evaluation(config);
+  numericalEvaluation(config);
 else
-  numerical_evaluation(myfig,exp,['./results/fig-' myfig '_exp-' num2str(exp) '.mat'],false,false);
+%   numericalEvaluation(myfig,exp,['./results/fig-' myfig '_exp-' num2str(exp) '.mat'],false,false);
+  numericalEvaluation(myfig,exp,[],true,true);
 end
 

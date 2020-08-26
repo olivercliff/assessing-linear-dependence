@@ -1,4 +1,4 @@
-function numerical_evaluation(figure_or_config,which_exp,output_file,plot_results,parallel)
+function numericalEvaluation(figure_or_config,which_exp,output_file,plot_results,parallel)
 
 % NUMERICAL_EVALUATION   Runs simulations of all numerical evalutions from our paper.
 
@@ -63,7 +63,7 @@ if ischar(figure_or_config)
   if any(fig_id(:))
     % Is the input a valid figure (1a-7b)...?
     [fig,subfig] = find(fig_id);
-    config = get_configuration(fig,subfig,which_exp);
+    config = getConfiguration(fig,subfig,which_exp);
   end
   
   fprintf('Performing numerical simulations from Fig. %s.\n', figure_or_config);
@@ -82,12 +82,12 @@ disp(config);
 univariate = config.dim_X == 1 && config.dim_Y == 1;
 
 if config.is_pc
-  compute_measure = @(X,Y,W,varargin) pcorr(X,Y,W,varargin{:});
+  computeMeasure = @(X,Y,W,varargin) pcorr(X,Y,W,varargin{:});
 else
   if config.is_granger
-    compute_measure = @(X,Y,W,varargin) mvgc(X,Y,W,'p',config.p,'q',config.q,varargin{:});
+    computeMeasure = @(X,Y,W,varargin) mvgc(X,Y,W,'p',config.p,'q',config.q,varargin{:});
   else
-    compute_measure = @(X,Y,W,varargin) mvmi(X,Y,W,varargin{:});
+    computeMeasure = @(X,Y,W,varargin) mvmi(X,Y,W,varargin{:});
   end
 end
 
@@ -146,27 +146,24 @@ p_W = config.dim_X+config.dim_Y+1:M;
   
 %% Run simulations
 
-% Pre-allocate measure (GC or MI value)..
-measure = zeros(config.R,1);
-
 % ..and p-values
 pvals_LR = zeros(config.R,1); % LR test
 pvals_E = zeros(config.R,1); % exact test
 
 % Save the F-test and prewhitened results if univariate
 if univariate
+  
   fprintf('The simulated time series are univariate, so we have the following tests available:\n');
   fprintf('\t1. The exact test\n');
-  fprintf('\t2a. The asymptotic LR (chi-2) test\n');
-  fprintf('\t2b. The asymptotic LR (chi-2) test [with prewhitened time series]\n');
-  fprintf('\t3a. The F-test\n');
-  fprintf('\t3b. The F-test [with prewhitened time series]\n');
-  
-  measure_pw = zeros(config.R,1);
+  fprintf('\t2. The asymptotic LR (chi-2) test\n');
+  fprintf('\t3. The F-test\n');
+  if config.whiten
+    fprintf('\t4. The asymptotic LR (chi-2) test [with prewhitened time series]\n');
+    fprintf('\t5. The F-test [with prewhitened time series]\n');
+  end
   
   pvals_F = zeros(config.R,1); % F-test
-  pvals_F_pw = zeros(config.R,1); % F-test + prewhiten
-  pvals_LR_pw = zeros(config.R,1); % LR test + prewhiten
+  
 else
   fprintf('The simulated time series are multivariate, so we have the following tests available:\n');
   fprintf('\t1. The exact test\n');
@@ -214,20 +211,20 @@ parfor (r = 1:config.R, parforargs)
   W = detrend(W);
 
   % Exact test
-  [measure(r),pvals_E(r),~,stats] = compute_measure(X,Y,W,'test','exact');
-  pvals_LR(r) = significance(measure(r),stats,'test','asymptotic');
+  [measure,pvals_E(r),~,stats] = computeMeasure(X,Y,W,'test','exact');
+  pvals_LR(r) = significance(measure,stats,'test','asymptotic');
   
   if univariate
     % F-test
-    pvals_F(r) = significance(measure(r),stats,'test','exact','varianceEstimator','none');
+    pvals_F(r) = significance(measure,stats,'test','exact','varianceEstimator','none');
     
     [X_pw,Y_pw,W_pw] = prewhiten(X,Y,W);
     
     % Pre-whitened F-test
-    [measure_pw(r),pvals_F_pw(r),~,stats_pw] = compute_measure(X_pw,Y_pw,W_pw,'test','exact','varianceEstimator','none');
+    [measure_pw,pvals_F_pw(r),~,stats_pw] = computeMeasure(X_pw,Y_pw,W_pw,'test','exact','varianceEstimator','none');
     
     % Pre-whitened Chi-2 test
-    pvals_LR_pw(r) = significance(measure_pw(r),stats_pw,'test','asymptotic');
+    pvals_LR_pw(r) = significance(measure_pw,stats_pw,'test','asymptotic');
   end
   
   if verbose

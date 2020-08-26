@@ -85,7 +85,7 @@ end
 % - 3: GC, optimal embedding
 % - 4: GC, high embedding
 % - 5: GC with MV dim 2 (not in paper)
-which_test = 3;
+which_test = 4;
 
 % Do you want to use the F-test or the asymptotic LR (chi^2) test 
 f_test = true;
@@ -181,7 +181,7 @@ rng(seed);
 
 % Run experiments
 fprintf('Running experiments...\n');
-for r = 1:R
+parfor r = 1:R
   
   % Randomly sample subjects (without replacement) and..
   ss = zeros(dims,2);  

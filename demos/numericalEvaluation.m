@@ -234,12 +234,12 @@ end
 if ~isempty(output_file)
   if univariate
     if config.whiten
-      save(output_file,'config','pvals_E','pvals_LR','pvals_F','pvals_LR_pw','pvals_F_pw');
+      save(output_file,'config','pvals_E','pvals_chi2','pvals_F','pvals_chi2_pw','pvals_F_pw');
     else
-      save(output_file,'config','pvals_E','pvals_LR','pvals_F');
+      save(output_file,'config','pvals_E','pvals_chi2','pvals_F');
     end
   else
-    save(output_file,'config','pvals_E','pvals_LR');
+    save(output_file,'config','pvals_E','pvals_chi2');
   end
 end
   

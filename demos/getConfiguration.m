@@ -1,4 +1,4 @@
-function config = get_configuration(fig,subfig,exp)
+function config = getConfiguration(fig,subfig,exp)
   
   % start on fig 2
   fig = fig + 1;
@@ -22,7 +22,7 @@ function config = get_configuration(fig,subfig,exp)
   filter_orders = 0:4:32;
   dims = 1:5;
   conditionals = 0:20:200;
-  qs = [1, 20, 40:20:100];
+  qs = [1,20,40:20:100];
   
   switch fig
     case 2
@@ -140,7 +140,7 @@ function config = get_configuration(fig,subfig,exp)
     case 9
       config.is_granger = false;
       config.filter_order = 8;
-      config.whiten = false;
+      config.whiten = true;
       
       config.dim_X = 1;
       config.dim_Y = 1;
@@ -156,7 +156,7 @@ function config = get_configuration(fig,subfig,exp)
       
       config.filter_order = 8;
       
-      config.whiten = false;
+      config.whiten = true;
       
       config.p = 'auto';
       config.q = 'auto';

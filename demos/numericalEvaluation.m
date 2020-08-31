@@ -30,12 +30,15 @@ if ~exist('mvgc.m','file')
   addpath('../utils/');
 end
 
-if nargin < 4
-  plot_results = true;
-  if nargin < 3
-    output_file = [];
-    if nargin < 2
-      which_exp = [];
+if nargin < 5
+  parallel = false;
+  if nargin < 4
+    plot_results = true;
+    if nargin < 3
+      output_file = [];
+      if nargin < 2
+        which_exp = [];
+      end
     end
   end
 end
@@ -146,6 +149,8 @@ p_W = config.dim_X+config.dim_Y+1:M;
 % ..and p-values
 pvals_E = zeros(config.R,1); % exact test
 pvals_chi2 = zeros(config.R,1); % LR test
+eta_mean = zeros(config.R,1);
+eta_var = zeros(config.R,1);
 
 fprintf('Using the following tests:\n');
 fprintf('\t1. The exact test\n');
@@ -163,6 +168,8 @@ if univariate
   pvals_F = zeros(config.R,1); % F-test
   pvals_F_pw = zeros(config.R,1); % F-test + prewhiten
   pvals_chi2_pw = zeros(config.R,1); % LR test + prewhiten
+  eta_mean_pw = zeros(config.R,1);
+  eta_var_pw = zeros(config.R,1);
 end
 
 rng(config.seed);
@@ -208,6 +215,8 @@ parfor (r = 1:config.R, parforargs)
   % Exact test
   [measure,pvals_E(r),~,stats] = computeMeasure(X,Y,W,'test','exact');
   pvals_chi2(r) = significance(measure,stats,'test','asymptotic');
+  eta_mean(r) = mean(diag(stats.N_e));
+  eta_var(r) = var(diag(stats.N_e));
   
   if univariate
     % F-test
@@ -221,6 +230,9 @@ parfor (r = 1:config.R, parforargs)
 
       % Pre-whitened Chi-2 test
       pvals_chi2_pw(r) = significance(measure_pw,stats_pw,'test','asymptotic');
+      
+      eta_mean_pw(r) = mean(diag(stats_pw.N_e));
+      eta_var_pw(r) = var(diag(stats_pw.N_e));
     end
   end
   
@@ -234,9 +246,9 @@ end
 if ~isempty(output_file)
   if univariate
     if config.whiten
-      save(output_file,'config','pvals_E','pvals_chi2','pvals_F','pvals_chi2_pw','pvals_F_pw');
+      save(output_file,'config','pvals_E','pvals_chi2','pvals_F','pvals_chi2_pw','pvals_F_pw','eta_mean_pw','eta_var_pw','eta_mean','eta_var');
     else
-      save(output_file,'config','pvals_E','pvals_chi2','pvals_F');
+      save(output_file,'config','pvals_E','pvals_chi2','pvals_F','eta_mean','eta_var');
     end
   else
     save(output_file,'config','pvals_E','pvals_chi2');

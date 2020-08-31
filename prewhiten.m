@@ -13,10 +13,22 @@ end
 [Xf,Yp,Xp] = embed(X,Y,p,p);
 Yf = Y(p+1:end);
 
-pi_B = Xf \ [ones(size(Xp,1),1), Xp];
+XpC = [ones(size(Xp,1),1), Xp];
+YpC = [ones(size(Xp,1),1), Yp];
 
-X_tilde = Xf - [ones(size(Xp,1),1),Xp]*pi_B';
-Y_tilde = Yf - [ones(size(Xp,1),1),Yp]*pi_B';
+pi_B = XpC\Xf;
+
+X_tilde = Xf - XpC*pi_B;
+Y_tilde = Yf - YpC*pi_B;
+
+% pi_B = parcorr(X,'numLags',p);
+% 
+% X_tilde = Xf;
+% Y_tilde = Yf;
+% for i = 1:p
+%   X_tilde = X_tilde - Xp(:,i) * pi_B(i+1);
+%   Y_tilde = Y_tilde - Yp(:,i) * pi_B(i+1);
+% end
 
 if nargin > 2 || isempty(W)
   W_tilde = W(p+1:end,:);

@@ -85,7 +85,7 @@ end
 % - 3: GC, optimal embedding
 % - 4: GC, high embedding
 % - 5: GC with MV dim 2 (not in paper)
-which_test = 4;
+which_test = 3;
 
 % Do you want to use the F-test or the asymptotic LR (chi^2) test 
 f_test = true;
@@ -127,7 +127,7 @@ end
 
 %% Default params
 
-seed = 1; % Used for the paper
+seed = 1; % Kind of irrelevant since parfor is used
 generate_tikz = false;
 
 R = 1000; % Number of trials
@@ -135,7 +135,7 @@ surrogates = 5000; % MC sample size
 alpha = 0.05; % Significance level
 seq = 201:1000; % Sequence of the data to take (cut off first+last 200)
 
-to_filter = 2; % Filter the BOLD data?
+to_filter = 2; % Filter the BOLD data? (1 = FIR, 2 = IIR)
 
 % Bias towards only selecting the highest ACF in the subject (increases the FPR slightly)
 only_high_ac_regions = false;
@@ -238,8 +238,8 @@ else
   legend([ph1 ph2],'LR test', 'Exact test','location', 'best');
 end
 
-fprintf('LR test FPR at %.2f: %.3g\n', alpha, mean(pvals_LR <= alpha) );
-fprintf('Exact test FPR at %.2f: %.3g\n', alpha, mean(pvals_E <= alpha) );
+fprintf('LR test FPR at %.2f: %.4g\n', alpha, mean(pvals_LR <= alpha) );
+fprintf('Exact test FPR at %.2f: %.4g\n', alpha, mean(pvals_E <= alpha) );
 
 if generate_tikz
   if ~exist('tikz','dir')

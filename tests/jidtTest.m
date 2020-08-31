@@ -34,7 +34,7 @@ end
 %% Set up some parameters
 % Choose which measure we want to check:
 test_options = {'mi','cmi','mvmi','gc','mvgc'};
-which_test = 'mvgc'; % Or use, e.g., which_test = test_options{4};
+which_test = 'gc'; % Or use, e.g., which_test = test_options{4};
 
 test_id = find(strcmp(test_options,which_test));
 if isempty(test_id)
@@ -43,10 +43,10 @@ end
 
 % Choose the sample length and RNG (if wanted)
 T = 1000; % Number of samples
-seed = now; % RNG seed
+seed = 'shuffle'; % RNG seed
 
 %% Set up the calculators
-javaaddpath('../jidt/infodynamics.jar');  
+javaaddpath('infodynamics.jar');  
 switch test_id
   case {1,3}
     calc = javaObject('infodynamics.measures.continuous.gaussian.MutualInfoCalculatorMultiVariateGaussian');
@@ -57,9 +57,9 @@ switch test_id
 end
 
 if test_id < 4
-  compute_measure = @(X,Y,W) mvmi(X,Y,W,'test','asymptotic');
+  computeMeasure = @(X,Y,W) mvmi(X,Y,W,'test','asymptotic');
 else
-  compute_measure = @(X,Y,W) mvgc(X,Y,W,'p','auto','q','auto','test','asymptotic');
+  computeMeasure = @(X,Y,W) mvgc(X,Y,W,'p','auto','q','auto','test','asymptotic');
 end
 
 %% Set up variables and generate random samples
@@ -100,7 +100,7 @@ W = Z(p_W,:)';
 %% Obtain measurements and p-values
 
 % From our code..
-[measure,pval,~,stats] = compute_measure(X,Y,W);
+[measure,pval,~,stats] = computeMeasure(X,Y,W);
 pval2 = significance(measure,stats,'test','asymptotic');
 
 % ...and JIDT
@@ -128,5 +128,5 @@ end
 
 %% Print results
 
-fprintf('Measure from JIDT: %.5g (p = %.5g)\n', measure_JIDT, pval_JIDT);
-fprintf('Measure from this code: %.5g (p = %.5g)\n', measure, pval);
+fprintf('Measure "%s" computed from JIDT: %.5g (p = %.5g)\n', which_test, measure_JIDT, pval_JIDT);
+fprintf('Measure "%s" computed from this toolkit: %.5g (p = %.5g)\n', which_test, measure, pval);

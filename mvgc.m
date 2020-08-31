@@ -7,10 +7,10 @@ function [F,pval,dist,stats] = mvgc(X,Y,varargin)
 %   F = MVGC(X,Y,W,...) returns the scalar estimate of Granger causality
 %   between X and Y conditioned on the N-by-C matrix W.
 %
-%   [I,PVAL] = MVMI(...) also returns PVAL, the p-value for testing the
-%   hypothesis of no correlation
+%   [F,PVAL] = MVGC(...) also returns PVAL, the p-value for testing the
+%   hypothesis of no dependence
 %
-%   [...] = MVMI(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies additional
+%   [...] = MVGC(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies additional
 %   parameters and their values.  Valid parameters are the following:
 %
 %         Parameter                   Value
@@ -104,7 +104,7 @@ else
 end
 
 % Embed the vectors for input to CMI calculator
-[Xf,Yp,Xp,Wp] = embed(X,Y,p,q,parser.Results.W);
+[Xf,Xp,Yp,Wp] = embed(X,p,Y,q,parser.Results.W);
 
 % Add any conditional matrix
 if isempty(Wp)

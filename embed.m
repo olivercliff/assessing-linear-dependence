@@ -1,4 +1,4 @@
-function [Xf,Yp,Xp,Wp] = embed(X,Y,p,q,W)
+function [Xf,Xp,Yp,Wf] = embed(X,p,Y,q,W)
 %EMBED Embed the past of vector AR process.
 %   [Xf,Yp,Xp] = EMBED(X,Y,P,Q) returns the K-by-N matrix Xf of future values of X,
 %   the LQ-by-N matrix Yp of past values of Y, and the KP-by-N matrix Xp of past
@@ -16,9 +16,9 @@ function [Xf,Yp,Xp,Wp] = embed(X,Y,p,q,W)
 %     Y = randn(100,3);
 %     p = 10;
 %     q = 10;
-%     [Xf,Yp,Xp] = embed(X,Y,p,q);
+%     [Xf,Xp,Yp] = embed(X,p,Y,q);
 %     te = mvmi(Xf,Yp,Xp)
-%     gc = mvgc(X,Y,[p q])
+%     gc = mvgc(X,Y,'p',p,'q',q)
 %
 %   See also <a href="matlab:help mvgc">mvgc</a>, <a href="matlab:help mvmi">mvmi</a>, <a href="matlab:help order">order</a>
 
@@ -45,13 +45,8 @@ function [Xf,Yp,Xp,Wp] = embed(X,Y,p,q,W)
 % this program. If not, see <http://www.gnu.org/licenses/>.
 % ------------------------------------------------------------------------------
 
-  if nargin < 5
-    W = [];
-  end
-
   N = size(X,1);
   dim_X = size(X,2);
-  dim_Y = size(Y,2);
 
   Xf = X(p+1:end,:);
   Xp = zeros(N-p,dim_X*p);
@@ -60,19 +55,25 @@ function [Xf,Yp,Xp,Wp] = embed(X,Y,p,q,W)
     dims = (i-1)*dim_X+1:i*dim_X;
     Xp(:,dims) = X(seq,:);
   end
+  
+  if nargin > 2
+    dim_Y = size(Y,2);
+    
+    Yp = zeros(N-q,dim_Y*q);
+    for i = 1:q
+      seq = i:N-q+i-1;
+      dims = (i-1)*dim_Y+1:i*dim_Y;
+      Yp(:,dims) = Y(seq,:);
+    end
 
-  Yp = zeros(N-q,dim_Y*q);
-  for i = 1:q
-    seq = i:N-q+i-1;
-    dims = (i-1)*dim_Y+1:i*dim_Y;
-    Yp(:,dims) = Y(seq,:);
+    pq_max = max([p,q]);
+    Xf = Xf(1-p+pq_max:end,:);
+    Xp = Xp(1-p+pq_max:end,:);
+    Yp = Yp(1-q+pq_max:end,:);
+    
+    if nargin > 4
+      % Ensure W is the right length
+      Wf = W(pq_max+1:end,:);
+    end
   end
-
-  pq_max = max([p,q]);
-  Xf = Xf(1-p+pq_max:end,:);
-  Xp = Xp(1-p+pq_max:end,:);
-  Yp = Yp(1-q+pq_max:end,:);
-
-  % Ensure W is the right length
-  Wp = W(pq_max+1:end,:);
 end

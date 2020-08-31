@@ -189,7 +189,8 @@ else
 end
 
 % Run sims
-parfor (r = 1:config.R, parforargs)
+% parfor (r = 1:config.R, parforargs)
+for r = 1:config.R
   Z = Sigma*randn(M,config.T);
   for t = 2:config.T
     Z(:,t) = Phi*Z(:,t-1) + Z(:,t);

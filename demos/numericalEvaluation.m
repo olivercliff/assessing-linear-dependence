@@ -224,7 +224,13 @@ for r = 1:config.R
     pvals_F(r) = significance(measure,stats,'test','exact','varianceEstimator','none');
     
     if config.whiten
-      [X_pw,Y_pw,W_pw] = prewhiten(X,Y,W);
+%       [X_pw,Y_pw,W_pw] = prewhiten(X,Y,W);
+      q = length(b_coeff)-1;
+      p = length(a_coeff)-1;
+      if config.ar
+        p = p + 1;
+      end
+      [X_pw,Y_pw,W_pw] = prewhiten_arma(X,Y,W,p,q);
 
       % Pre-whitened F-test
       [measure_pw,pvals_F_pw(r),~,stats_pw] = computeMeasure(X_pw,Y_pw,W_pw,'test','exact','varianceEstimator','none');
@@ -247,9 +253,9 @@ end
 if ~isempty(output_file)
   if univariate
     if config.whiten
-      save(output_file,'config','pvals_E','pvals_chi2','pvals_F','pvals_chi2_pw','pvals_F_pw','eta_mean_pw','eta_var_pw','eta_mean','eta_var');
+      save(output_file,'config','pvals_E','pvals_chi2','pvals_F','pvals_chi2_pw','pvals_F_pw','eta_mean_pw','eta_mean');
     else
-      save(output_file,'config','pvals_E','pvals_chi2','pvals_F','eta_mean','eta_var');
+      save(output_file,'config','pvals_E','pvals_chi2','pvals_F','eta_mean');
     end
   else
     save(output_file,'config','pvals_E','pvals_chi2');

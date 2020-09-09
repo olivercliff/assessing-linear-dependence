@@ -1,7 +1,7 @@
 
 % Choose settings from the paper (or '' for your own custom configuration)
 % myfig = '8b';
-myfig = '9b';
+myfig = '8b';
 exp = 6;
 
 if isempty(myfig)

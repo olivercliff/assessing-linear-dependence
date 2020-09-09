@@ -262,7 +262,7 @@ end
 if ~isempty(output_file)
   if univariate
     if config.whiten
-      save(output_file,'config','pvals_E','pvals_chi2','pvals_F','pvals_chi2_pw','pvals_F_pw','pw_orders','eta_mean_pw','eta_mean');
+      save(output_file,'config','pvals_E','pvals_chi2','pvals_F','pw_orders','eta_mean');
     else
       save(output_file,'config','pvals_E','pvals_chi2','pvals_F','eta_mean');
     end

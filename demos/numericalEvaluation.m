@@ -56,7 +56,9 @@ if ischar(figure_or_config)
                  '6a','6b';
                  '7a','7b';
                  '8a','8b';
-                 '9a','9b'};
+                 '9a','9b';
+                 '10a','10b';
+                 '11a','11b'};
 
   fig_id = strcmp(figure_opts,figure_or_config);
 
@@ -160,18 +162,9 @@ fprintf('\t2. The asymptotic LR (chi-square) test\n');
 
 % Save the F-test and prewhitened results if univariate
 if univariate
+  pvals_F = zeros(config.R,1); % F-test
   
   fprintf('\t3. The F-test\n');
-  if config.whiten
-    fprintf('\t4. The asymptotic LR (chi-square) test [with prewhitened time series]\n');
-    fprintf('\t5. The F-test [with prewhitened time series]\n');
-  end
-  
-  pvals_F = zeros(config.R,1); % F-test
-  pvals_F_pw = zeros(config.R,1); % F-test + prewhiten
-  pvals_chi2_pw = zeros(config.R,1); % LR test + prewhiten
-  eta_mean_pw = zeros(config.R,1);
-  eta_var_pw = zeros(config.R,1);
 end
 
 rng(config.seed);
@@ -225,19 +218,14 @@ for r = 1:config.R
   if ~isempty(W)
     W = detrend(W);
   end
-
-  % Exact test
-  [measure,pvals_E(r),~,stats] = computeMeasure(X,Y,W,'test','exact');
-  pvals_chi2(r) = significance(measure,stats,'test','asymptotic');
-  eta_mean(r) = mean(diag(stats.N_e));
-  eta_var(r) = var(diag(stats.N_e));
   
-  if univariate
-    % F-test
-    pvals_F(r) = significance(measure,stats,'test','exact','varianceEstimator','none');
-    
-    if config.whiten
-%       [X_pw,Y_pw,W_pw] = prewhiten(X,Y,W);
+  if config.whiten > 0
+
+    p = [];
+    q = [];
+    % If whiten == 1, select optimal order, else if whiten > 1, infer
+    % optimal order
+    if config.whiten == 1
       if config.to_filter == 3
         p = config.filter_order;
         q = 0;
@@ -248,17 +236,20 @@ for r = 1:config.R
           p = p + 1;
         end
       end
-      [X_pw,Y_pw,W_pw,pw_orders] = prewhitenARMA(X,Y,W,p,q);
-
-      % Pre-whitened F-test
-      [measure_pw,pvals_F_pw(r),~,stats_pw] = computeMeasure(X_pw,Y_pw,W_pw,'test','exact','varianceEstimator','none');
-
-      % Pre-whitened Chi-2 test
-      pvals_chi2_pw(r) = significance(measure_pw,stats_pw,'test','asymptotic');
-      
-      eta_mean_pw(r) = mean(diag(stats_pw.N_e));
-      eta_var_pw(r) = var(diag(stats_pw.N_e));
     end
+    
+    [X,Y,W,pw_orders(r,:)] = prewhitenARMA(X,Y,W,p,q);
+  end
+
+  % Exact test
+  [measure,pvals_E(r),~,stats] = computeMeasure(X,Y,W,'test','exact');
+  pvals_chi2(r) = significance(measure,stats,'test','asymptotic');
+  eta_mean(r) = mean(diag(stats.N_e));
+  eta_var(r) = var(diag(stats.N_e));
+  
+  if univariate
+    % F-test
+    pvals_F(r) = significance(measure,stats,'test','exact','varianceEstimator','none');
   end
   
   if verbose

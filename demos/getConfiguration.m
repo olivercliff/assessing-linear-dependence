@@ -32,7 +32,7 @@ function config = getConfiguration(fig,subfig,exp)
       config.dim_Y = 1; % set Y dimension
       config.dim_W = 0; % set W dimension
       
-      config.whiten = true;
+      config.whiten = false;
       
       if isempty(exp)
         config.filter_order = 8;
@@ -46,7 +46,7 @@ function config = getConfiguration(fig,subfig,exp)
       config.dim_Y = 1;
       config.dim_W = 1;
       
-      config.whiten = true;
+      config.whiten = false;
       
       if isempty(exp)
         config.filter_order = 8;
@@ -61,7 +61,7 @@ function config = getConfiguration(fig,subfig,exp)
       
       config.filter_order = 8;
       
-      config.whiten = true;
+      config.whiten = false;
       
       if isempty(exp)
         config.dim_W = 100;
@@ -94,7 +94,7 @@ function config = getConfiguration(fig,subfig,exp)
       config.dim_Y = 1;
       config.dim_W = 0;
       
-      config.whiten = true;
+      config.whiten = false;
       
       if isempty(exp)
         config.filter_order = 8;
@@ -112,7 +112,7 @@ function config = getConfiguration(fig,subfig,exp)
       config.dim_Y = 1;
       config.dim_W = 0;
       
-      config.whiten = true;
+      config.whiten = false;
       
       if isempty(exp)
         config.q = '20';
@@ -140,7 +140,7 @@ function config = getConfiguration(fig,subfig,exp)
     case 9
       config.is_granger = false;
       config.filter_order = 8;
-      config.whiten = true;
+      config.whiten = false;
       
       config.dim_X = 1;
       config.dim_Y = 1;
@@ -156,7 +156,7 @@ function config = getConfiguration(fig,subfig,exp)
       
       config.filter_order = 8;
       
-      config.whiten = true;
+      config.whiten = false;
       
       config.p = 'auto';
       config.q = 'auto';
@@ -169,6 +169,43 @@ function config = getConfiguration(fig,subfig,exp)
         config.T = 2^9;
       else
         config.T = 2^(5+2*exp);
+      end
+    case 11
+      % Filter the innovation process
+      config.ar = false;
+      
+      config.is_granger = false; % GC or MI?
+      
+      config.dim_X = 1; % set X dimension
+      config.dim_Y = 1; % set Y dimension
+      config.dim_W = 0; % set W dimension
+      
+      config.whiten = true;
+      
+      if isempty(exp)
+        config.filter_order = 8;
+      else
+        config.filter_order = filter_orders(exp);
+      end
+    case 12
+      % Filter the innovation process
+      config.ar = false;
+      
+      config.is_granger = true;
+      
+      config.p = 'auto';
+      config.q = 'auto';
+      
+      config.dim_X = 1;
+      config.dim_Y = 1;
+      config.dim_W = 0;
+      
+      config.whiten = true;
+      
+      if isempty(exp)
+        config.filter_order = 8;
+      else
+        config.filter_order = filter_orders(exp);
       end
   end
   

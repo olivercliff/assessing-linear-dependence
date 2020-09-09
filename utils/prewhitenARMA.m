@@ -1,8 +1,16 @@
 function [X_tilde,Y_tilde,W_tilde,orders] = prewhitenARMA(X,Y,W,p,q)
 % Takes in two vectors, X and Y, (optionally a third, W) and outputs the
-% pre-whitened time series (based on the AR(p) model of X)
+% pre-whitened time series (based on the ARMA(p,q) model of X)
 
 % Get the model order
+if p == 0 && q == 0
+  X_tilde = X;
+  Y_tilde = Y;
+  W_tilde = W;
+  orders = [0, 0];
+  return;
+end
+
 while q > 0 || p > 0
   try
     opts = optimset('fmincon');

@@ -1,8 +1,8 @@
 
 % Choose settings from the paper (or '' for your own custom configuration)
 % myfig = '8b';
-myfig = '1a';
-exp = 1;
+myfig = '9b';
+exp = 6;
 
 if isempty(myfig)
   config.T = 2^5; % Dataset length

@@ -150,11 +150,11 @@ p_W = config.dim_X+config.dim_Y+1:M;
 %% Run simulations
 
 % ..and p-values
-pvals_E = zeros(config.R,1); % exact test
-pvals_chi2 = zeros(config.R,1); % LR test
-eta_mean = zeros(config.R,1);
-eta_var = zeros(config.R,1);
-pw_orders = zeros(config.R,2);
+pvals_E = nan(config.R,1); % exact test
+pvals_chi2 = nan(config.R,1); % LR test
+eta_mean = nan(config.R,1);
+eta_var = nan(config.R,1);
+pw_orders = nan(config.R,2);
 
 fprintf('Using the following tests:\n');
 fprintf('\t1. The exact test\n');
@@ -162,7 +162,7 @@ fprintf('\t2. The asymptotic LR (chi-square) test\n');
 
 % Save the F-test and prewhitened results if univariate
 if univariate
-  pvals_F = zeros(config.R,1); % F-test
+  pvals_F = nan(config.R,1); % F-test
   
   fprintf('\t3. The F-test\n');
 end
@@ -238,7 +238,12 @@ for r = 1:config.R
       end
     end
     
-    [X,Y,W,pw_orders(r,:)] = prewhitenARMA(X,Y,W,p,q);
+    try
+      [X,Y,W,pw_orders(r,:)] = prewhitenARMA(X,Y,W,p,q);
+    catch
+      warning('Run %i failed to learn model\n',r);
+      continue;
+    end
   end
 
   % Exact test

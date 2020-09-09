@@ -11,19 +11,16 @@ if p == 0 && q == 0
   return;
 end
 
-while q > 0 || p > 0
-  try
-    opts = optimset('fmincon');
-    opts.Algorithm = 'interior-point';
-    mdl = arima(p,0,q);
-    mdl = estimate(mdl,X,'options',opts,'Display','off');
-    break;
-  catch
-    warning('Reducing filter order.\n');
-    q = q-1;
-    p = p-1;
-  end
+% Try two ARMA fitting procedures (if both fail then the try-catch outside should set this run to NaN)
+try
+  mdl = arima(p,0,q);
+  mdl = estimate(mdl,X,'Display','off');
+catch
+  opts = optimset('fmincon');
+  opts.Algorithm = 'interior-point';
+  mdl = estimate(mdl,X,'options',opts,'Display','off');
 end
+
 orders = [p,q];
 
 X_tilde = infer(mdl,X);

@@ -244,6 +244,13 @@ for r = 1:config.R
       warning('Run %i failed to learn model\n',r);
       continue;
     end
+    
+    % Normalise the data again (ensure prewhitening didn't mess w it)
+    X = detrend(X);
+    Y = detrend(Y);
+    if ~isempty(W)
+      W = detrend(W);
+    end
   end
 
   % Exact test

@@ -85,7 +85,7 @@ end
 % - 3: GC, optimal embedding
 % - 4: GC, high embedding
 % - 5: GC with MV dim 2 (not in paper)
-which_test = 3;
+which_test = 1;
 
 % Do you want to use the F-test or the asymptotic LR (chi^2) test 
 f_test = true;
@@ -172,16 +172,18 @@ M = size(dat,3);
 
 % Pre-allocate measure (GC or MI value)..
 measure = zeros(R,1);
+measure_pw = zeros(R,1);
 
 % ..and p-values
 pvals_LR = zeros(R,1); % log-likelihood ratio test p-values
+pvals_LR_pw = zeros(R,1); % log-likelihood ratio test p-values
 pvals_E = zeros(R,1); % exact test p-values
 
 rng(seed);
 
 % Run experiments
 fprintf('Running experiments...\n');
-parfor r = 1:R
+for r = 1:R
   
   % Randomly sample subjects (without replacement) and..
   ss = zeros(dims,2);  
@@ -206,13 +208,23 @@ parfor r = 1:R
   X = X(:,seq)';
   Y = Y(:,seq)';
   
+  [X_pw,Y_pw,W_pw] = prewhiten_arma(X,Y,W,1,1);
+  
   % Compute our measures
   if is_granger
     [measure(r),pvals_E(r)] = mvgc(X,Y,W,'p',config.p,'q',config.q,'test','exact','surrogates',surrogates);
     [~,pvals_LR(r)] = mvgc(X,Y,W,'p',config.p,'q',config.q,'test','asymptotic');
+    
+    if dims == 1
+      [measure_pw(r),pvals_LR_pw(r)] = mvgc(X_pw,Y_pw,W_pw,'p',config.p,'q',config.q,'test','asymptotic');
+    end
   else
     [measure(r),pvals_E(r)] = mvmi(X,Y,W,'test','exact','surrogates',surrogates);
     [measure(r),pvals_LR(r)] = mvmi(X,Y,W,'test','asymptotic');
+    
+    if dims == 1
+      [measure_pw(r),pvals_LR_pw(r)] = mvgc(X_pw,Y_pw,W_pw,'test','asymptotic');
+    end
   end
   
   if verbose
@@ -231,6 +243,7 @@ hold on;
 plot([0 1], [0 1], 'k:');
 ph1 = plot(sort(pvals_LR),linspace(0,1,R), '-', 'color', col_LR, 'linewidth', 1);
 ph2 = plot(sort(pvals_E),linspace(0,1,R), '-', 'color', col_E, 'linewidth', 1);
+ph3 = plot(sort(pvals_LR_pw),linspace(0,1,R), '--', 'color', col_LR, 'linewidth', 1);
 
 if f_test
   legend([ph1 ph2],'Standard F-test', 'Exact test','location', 'best');

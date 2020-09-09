@@ -91,7 +91,7 @@ else
   end
 end
 
-if config.filter_order > 0
+if config.to_filter && config.filter_order > 0
   if config.to_filter == 1
     % FIR filter
     b_coeff = fir1(config.filter_order, 0.5);
@@ -101,7 +101,8 @@ if config.filter_order > 0
     [b_coeff, a_coeff] = butter(config.filter_order, 0.5);
   end
 else
-  b_coeff = nan; a_coeff = nan;
+  b_coeff = nan;
+  a_coeff = nan;
 end
   
 % Is the original signal autoregressive or spectrally white?
@@ -151,6 +152,7 @@ pvals_E = zeros(config.R,1); % exact test
 pvals_chi2 = zeros(config.R,1); % LR test
 eta_mean = zeros(config.R,1);
 eta_var = zeros(config.R,1);
+pw_orders = zeros(config.R,2);
 
 fprintf('Using the following tests:\n');
 fprintf('\t1. The exact test\n');
@@ -191,27 +193,38 @@ end
 % Run sims
 % parfor (r = 1:config.R, parforargs)
 for r = 1:config.R
-  Z = Sigma*randn(M,config.T);
-  for t = 2:config.T
-    Z(:,t) = Phi*Z(:,t-1) + Z(:,t);
-  end
+  
+  if config.to_filter == 3 && univariate && config.dim_W == 0
+    phi = generateARMAParams(config.filter_order,0);
+    mdl = arima('AR',phi,'constant',0,'variance',1);
+    X = simulate(mdl,config.T);
+    Y = simulate(mdl,config.T);
+    W = [];
+  else
+    Z = Sigma*randn(M,config.T);
+    for t = 2:config.T
+      Z(:,t) = Phi*Z(:,t-1) + Z(:,t);
+    end
 
-  % Partition the dataset (Z) into multiple time series (X,Y, and conditional W)
-  X = Z(p_X,:)';
-  Y = Z(p_Y,:)';
-  W = Z(p_W,:)';
+    % Partition the dataset (Z) into multiple time series (X,Y, and conditional W)
+    X = Z(p_X,:)';
+    Y = Z(p_Y,:)';
+    W = Z(p_W,:)';
 
-  % Filter the data to induce higher autocorrelation (if opted)
-  if config.to_filter > 0 && config.filter_order > 0
-    X = filter(b_coeff,a_coeff,X,[],1);
-    Y = filter(b_coeff,a_coeff,Y,[],1);
-    W = filter(b_coeff,a_coeff,W,[],1);
+    % Filter the data to induce higher autocorrelation (if opted)
+    if config.to_filter > 0 && config.filter_order > 0
+      X = filter(b_coeff,a_coeff,X,[],1);
+      Y = filter(b_coeff,a_coeff,Y,[],1);
+      W = filter(b_coeff,a_coeff,W,[],1);
+    end
   end
   
   % Normalise the data (N.B. a column is a single time series)
   X = detrend(X);
   Y = detrend(Y);
-  W = detrend(W);
+  if ~isempty(W)
+    W = detrend(W);
+  end
 
   % Exact test
   [measure,pvals_E(r),~,stats] = computeMeasure(X,Y,W,'test','exact');
@@ -225,12 +238,17 @@ for r = 1:config.R
     
     if config.whiten
 %       [X_pw,Y_pw,W_pw] = prewhiten(X,Y,W);
-      q = length(b_coeff)-1;
-      p = length(a_coeff)-1;
-      if config.ar
-        p = p + 1;
+      if config.to_filter == 3
+        p = config.filter_order;
+        q = 0;
+      else
+        p = length(a_coeff)-1;
+        q = length(b_coeff)-1;
+        if config.ar
+          p = p + 1;
+        end
       end
-      [X_pw,Y_pw,W_pw] = prewhiten_arma(X,Y,W,p,q);
+      [X_pw,Y_pw,W_pw,pw_orders] = prewhitenARMA(X,Y,W,p,q);
 
       % Pre-whitened F-test
       [measure_pw,pvals_F_pw(r),~,stats_pw] = computeMeasure(X_pw,Y_pw,W_pw,'test','exact','varianceEstimator','none');
@@ -253,7 +271,7 @@ end
 if ~isempty(output_file)
   if univariate
     if config.whiten
-      save(output_file,'config','pvals_E','pvals_chi2','pvals_F','pvals_chi2_pw','pvals_F_pw','eta_mean_pw','eta_mean');
+      save(output_file,'config','pvals_E','pvals_chi2','pvals_F','pvals_chi2_pw','pvals_F_pw','pw_orders','eta_mean_pw','eta_mean');
     else
       save(output_file,'config','pvals_E','pvals_chi2','pvals_F','eta_mean');
     end

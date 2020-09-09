@@ -1,4 +1,4 @@
-function p = order(Z,numLags)
+function p = order(Z,num_lags)
 %EMBED Embed the past of vector AR process.
 %   P = ORDER(X) returns the optimal AR order P of the the N-by-K matrix X
 %   using the first partial autocorrelation that is less than 1.96/sqrt(N) or
@@ -44,29 +44,27 @@ T = size(Z,1);
 D = size(Z,2);
 
 if nargin == 1
-  numLags = round(T/3);
+  num_lags = round(T/3);
 end
 
 ps = zeros(D,1);
 for i = 1:D
   X = Z(:,i);
-  alpha = [1;zeros(numLags,1)];
+  alpha = zeros(num_lags,1);
   
   cp = [];
-  for k = 1:numLags
-    lagX = lagmatrix(X,1:k+1);
-    
-    [Q,R] = qr([ones((length(X)-k),1)  lagX(k+1:end,1:k)],0);
-    b = R\(Q'*X(k+1:end));
-    alpha(k+1) = b(end);
-    
-    if abs(alpha(k+1)) <= 1.96/sqrt(T-k)
-      cp = k;
+  resids = X;
+
+  for k = 1:num_lags
+    alpha(k) = X(1:end-k)\resids(2:end);
+    if abs(alpha(k)) <= 1.96/sqrt(T-k)
+      cp = k-1;
       break;
     end
+    resids = resids(2:end) - X(1:end-k)*alpha(k);
   end
   if isempty(cp)
-    ps(i) = numLags;
+    ps(i) = num_lags;
   else
     ps(i) = cp;
   end

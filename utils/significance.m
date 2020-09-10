@@ -114,7 +114,7 @@ elseif strcmp(parser.Results.test,'exact')
 
   if any(stat.d_2 < 1)
     sum_lt1 = sum(stat.d_2 < 1);
-    warning('%d Effective DOF < 50 (%s).\n',...
+    warning('%d Effective DOF < 1 (%s).\n',...
               sum_lt1, mat2str(stat.d_2(stat.d_2 < 1)));
   end
   

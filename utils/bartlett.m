@@ -1,4 +1,4 @@
-function [v,ess] = bartlett(Z,taper_method,full)
+function [v,ess] = bartlett(Z,taper_method,full,M)
 
 switch taper_method
   case 'none'
@@ -25,8 +25,12 @@ dim = size(Z,2); % Number of correlations
 assert(size(Z,3) == 2);
 v = zeros(dim);
 
+% Select cut-off for ACF/tapering
+if nargin < 4
+  M = ceil(2*sqrt(N));
+end
+
 % Set up tapering
-M = ceil(2*sqrt(N));
 ks = abs([-M+1:0, 1:M-1]);
 
 lambda_k = ones(2*M-1,1);

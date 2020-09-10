@@ -52,18 +52,27 @@ for i = 1:D
   X = Z(:,i);
   alpha = zeros(num_lags,1);
   
-  % Yule-walker approach is better for memory since we're iteratively solving it
-  acf = autocorr(X,num_lags);
+  % Yule-walker approach is faster since we're iteratively solving it
+  ACF = autocorr(y,numLags);
 
-  for l = 1:num_lags
-     AR = toeplitz(acf(1:l))\acf(2:(l+1));
-     alpha(l) = AR(end);
-     if abs(alpha(l)) <= 1.96/sqrt(T-l)
-      cp = l-1;
+    for L = 1:numLags
+        
+       AR        = toeplitz(ACF(1:L))\ACF(2:(L+1));
+       pacf(L+1) = AR(end);
+       
+    end
+
+  for k = 1:num_lags
+    X_tmk = X(1:end-k);
+    e_t = resids(2:end);
+    
+    alpha(k) = X_tmk\e_t;
+    if abs(alpha(k)) <= 1.96/sqrt(T-k)
+      cp = k-1;
       break;
     end
+    resids = e_t - X_tmk*alpha(k);
   end
-
   if isempty(cp)
     ps(i) = num_lags;
   else

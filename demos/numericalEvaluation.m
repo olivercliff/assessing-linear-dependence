@@ -213,10 +213,10 @@ for r = 1:config.R
   end
   
   % Normalise the data (N.B. a column is a single time series)
-  X = detrend(X);
-  Y = detrend(Y);
+  X = zscore(detrend(X));
+  Y = zscore(detrend(Y));
   if ~isempty(W)
-    W = detrend(W);
+    W = zscore(detrend(W));
   end
   
   if config.whiten > 0
@@ -241,15 +241,15 @@ for r = 1:config.R
     try
       [X,Y,W,pw_orders(r,:)] = prewhitenARMA(X,Y,W,p,q);
     catch
-      warning('Run %i failed to learn model\n',r);
+      warning('Run %i failed to learn ARMA model\n',r);
       continue;
     end
     
     % Normalise the data again (ensure prewhitening didn't mess w it)
-    X = detrend(X);
-    Y = detrend(Y);
+    X = zscore(detrend(X));
+    Y = zscore(detrend(Y));
     if ~isempty(W)
-      W = detrend(W);
+      W = zscore(detrend(W));
     end
   end
 

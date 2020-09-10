@@ -220,26 +220,9 @@ for r = 1:config.R
   end
   
   if config.whiten > 0
-
-    p = [];
-    q = [];
-    % If whiten == 1, select optimal order, else if whiten > 1, infer
-    % optimal order
-    if config.whiten == 1
-      if config.to_filter == 3
-        p = config.filter_order;
-        q = 0;
-      else
-        p = length(a_coeff)-1;
-        q = length(b_coeff)-1;
-        if config.ar
-          p = p + 1;
-        end
-      end
-    end
     
     try
-      [X,Y,W,pw_orders(r,:)] = prewhitenARMA(X,Y,W,p,q);
+      [X,Y,W,pw_orders(r,:)] = prewhitenARMA(X,Y,W,config.arma_p_max,config.arma_q_max);
     catch
       warning('Run %i failed to learn ARMA model\n',r);
       continue;
@@ -254,7 +237,7 @@ for r = 1:config.R
   end
 
   % Exact test
-  [measure,pvals_E(r),~,stats] = computeMeasure(X,Y,W,'test','exact');
+  [measure,pvals_E(r),~,stats] = computeMeasure(X,Y,W,'test','exact','taperMethod','tukey');
   pvals_chi2(r) = significance(measure,stats,'test','asymptotic');
   eta_mean(r) = mean(diag(stats.N_e));
   eta_var(r) = var(diag(stats.N_e));
@@ -266,7 +249,12 @@ for r = 1:config.R
   
   if verbose
     if mod(r,10) == 0
-      fprintf('Completed run %d/%d.\n', r, config.R);
+      fprintf('Completed run %d/%d. Size (at 5%%):\n', r, config.R);
+      fprintf('\tModified F-test: %.3g\n', mean(pvals_E(1:r) <= 0.05 ));
+      fprintf('\tChi^2-test: %.3g\n', mean(pvals_chi2(1:r) <= 0.05 ));
+      if univariate
+        fprintf('\tF-test: %.3g\n', mean(pvals_F(1:r) <= 0.05 ));
+      end
     end
   end
 end

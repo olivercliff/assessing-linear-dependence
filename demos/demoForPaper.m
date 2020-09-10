@@ -2,7 +2,7 @@
 % Choose settings from the paper (or '' for your own custom configuration)
 % myfig = '8b';
 myfig = '11b';
-exp = 3;
+exp = 2;
 
 if isempty(myfig)
   config.T = 2^5; % Dataset length
@@ -23,6 +23,8 @@ if isempty(myfig)
   config.q = 'auto';
   
   config.whiten = true; % Granger causality (not CMI)
+  config.arma_p_max = 5;
+  config.arma_q_max = 5;
 
   config.is_pc = false;
 

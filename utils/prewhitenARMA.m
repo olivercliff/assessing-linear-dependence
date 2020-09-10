@@ -1,35 +1,49 @@
-function [X_tilde,Y_tilde,W_tilde,orders] = prewhitenARMA(X,Y,W,p,q)
+function [X_tilde,Y_tilde,W_tilde,orders] = prewhitenARMA(X,Y,W,p_max,q_max)
 % Takes in two vectors, X and Y, (optionally a third, W) and outputs the
 % pre-whitened time series (based on the ARMA(p,q) model of X)
 
 % Get the model order
-if p == 0 && q == 0
-  X_tilde = X;
-  Y_tilde = Y;
-  W_tilde = W;
-  orders = [0, 0];
-  return;
+if nargin < 4 || isempty(p_max)
+  p_max = 1;
+end
+if nargin < 5 || isempty(q_max)
+  q_max = 1;
 end
 
-% Try two ARMA fitting procedures (if both fail then the try-catch outside should set this run to NaN)
-try
-  mdl = arima(p,0,q);
-  mdl = estimate(mdl,X,'Display','off');
-catch
-  opts = optimset('fmincon');
-  opts.Algorithm = 'interior-point';
-  mdl = estimate(mdl,X,'options',opts,'Display','off');
+logL = zeros(1+p_max,1+q_max);
+mdl = cell(1+p_max,1+q_max);
+for p = 0:p_max
+  for q = 0:q_max
+    % Try two ARMA fitting procedures (if both fail then the try-catch outside should set this run to NaN)
+    mdl{p+1,q+1} = arima(p,0,q);
+    try
+      [mdl{p+1,q+1},~,logL(p+1,q+1)] = estimate(mdl{p+1,q+1},X,'Display','off');
+    catch
+      opts = optimset('fmincon');
+      opts.Algorithm = 'interior-point';
+      [mdl{p+1,q+1},~,logL(p+1,q+1)] = estimate(mdl{p+1,q+1},X,'options',opts,'Display','off');
+    end
+  end
 end
 
-orders = [p,q];
+nparams = (1:p_max+1)'*(1:q_max+1);
+[~,bic] = aicbic(logL(:), nparams(:), length(X)*ones((p_max+1)*(q_max+1),1));
 
-X_tilde = infer(mdl,X);
-Y_tilde = infer(mdl,Y);
+% Use AIC
+[~,opt_id] = min(bic);
+[p_opt,q_opt] = ind2sub([1+p_max, 1+q_max],opt_id);
+
+opt_mdl = mdl{p_opt,q_opt};
+
+orders = [p_opt-1,q_opt-1];
+
+X_tilde = infer(opt_mdl,X);
+Y_tilde = infer(opt_mdl,Y);
 
 if nargin > 2 || isempty(W)
   W_tilde = zeros(size(X_tilde,1),size(W,2));
   for i = 1:size(W,2)
-    W_tilde(:,i) = infer(mdl,W(:,i));
+    W_tilde(:,i) = infer(opt_mdl,W(:,i));
   end
 else
   W_tilde = [];

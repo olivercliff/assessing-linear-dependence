@@ -278,9 +278,16 @@ for r = 1:config.R
     if mod(r,10) == 0
       fprintf('Completed run %d/%d. Size (at 5%%):\n', r, config.R);
       fprintf('\tModified F-test: %.3g\n', mean(pvals_E(1:r) <= 0.05 ));
-      fprintf('\tChi^2-test: %.3g\n', mean(pvals_chi2(1:r) <= 0.05 ));
-      if univariate
-        fprintf('\tF-test: %.3g\n', mean(pvals_F(1:r) <= 0.05 ));
+      if config.whiten
+        fprintf('\tF-test (AR(1) whitened): %.3g\n', mean(pvals_F(1:r,1) <= 0.05 ));
+        fprintf('\tF-test (ARMA(1,1) whitened): %.3g\n', mean(pvals_F(1:r,2) <= 0.05 ));
+        fprintf('\tF-test (AR(p) whitened): %.3g\n', mean(pvals_F(1:r,3) <= 0.05 ));
+        fprintf('\tF-test (ARMA(p,q) whitened): %.3g\n', mean(pvals_F(1:r,4) <= 0.05 ));
+      else
+        fprintf('\tChi^2-test: %.3g\n', mean(pvals_chi2(1:r) <= 0.05 ));
+        if univariate
+          fprintf('\tF-test: %.3g\n', mean(pvals_F(1:r) <= 0.05 ));
+        end
       end
     end
   end

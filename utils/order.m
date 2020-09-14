@@ -44,7 +44,7 @@ T = size(Z,1);
 D = size(Z,2);
 
 if nargin == 1
-  num_lags = round(T/3);
+  num_lags = min(round(T/3),200);
 end
 
 ps = zeros(D,1);

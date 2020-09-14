@@ -85,7 +85,7 @@ end
 % - 3: GC, optimal embedding
 % - 4: GC, high embedding
 % - 5: GC with MV dim 2 (not in paper)
-which_test = 1;
+which_test = 3;
 
 % Do you want to use the F-test or the asymptotic LR (chi^2) test 
 f_test = true;
@@ -208,22 +208,20 @@ for r = 1:R
   X = X(:,seq)';
   Y = Y(:,seq)';
   
-  [X_pw,Y_pw,W_pw] = prewhiten_arma(X,Y,W,1,1);
-  
   % Compute our measures
   if is_granger
     [measure(r),pvals_E(r)] = mvgc(X,Y,W,'p',config.p,'q',config.q,'test','exact','surrogates',surrogates);
     [~,pvals_LR(r)] = mvgc(X,Y,W,'p',config.p,'q',config.q,'test','asymptotic');
     
     if dims == 1
-      [measure_pw(r),pvals_LR_pw(r)] = mvgc(X_pw,Y_pw,W_pw,'p',config.p,'q',config.q,'test','asymptotic');
+      [measure_pw(r),pvals_LR_pw(r)] = mvgc(X,Y,W,'p',config.p,'q',config.q,'test','asymptotic');
     end
   else
     [measure(r),pvals_E(r)] = mvmi(X,Y,W,'test','exact','surrogates',surrogates);
     [measure(r),pvals_LR(r)] = mvmi(X,Y,W,'test','asymptotic');
     
     if dims == 1
-      [measure_pw(r),pvals_LR_pw(r)] = mvgc(X_pw,Y_pw,W_pw,'test','asymptotic');
+      [measure_pw(r),pvals_LR_pw(r)] = mvgc(X,Y,W,'test','asymptotic');
     end
   end
   

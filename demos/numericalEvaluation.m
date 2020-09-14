@@ -162,6 +162,7 @@ if config.whiten
   pvals_F = nan(config.R,4); % 4 different approaches to prewhitening
   pw_ar_orders = nan(config.R,1);
   pw_arma_orders = nan(config.R,2);
+  pw_timer = nan(config.R,4);
   fprintf('\t2. The F-test after prewhitening\n');
 else
   fprintf('\t2. The asymptotic LR (chi-square) test\n');
@@ -175,6 +176,8 @@ else
     fprintf('\t3. The F-test\n');
   end
 end
+
+timer = nan(config.R,1);
 
 rng(config.seed);
 
@@ -229,13 +232,17 @@ for r = 1:config.R
   end
   
   % Our modified F-test
+  tic;
   [measure,pvals_E(r),~,stats] = computeMeasure(X,Y,W,'test','exact','taperMethod','tukey');
+  timer(r) = toc;
   eta_mean(r) = mean(diag(stats.N_e));
   
   if config.whiten > 0
     
     try
+      tic;
       [X_pw_ar1,Y_pw_ar1,W_pw_ar1] = prewhitenAR(X,Y,W,1);
+      pw_timer(r,1) = toc;
       [~,pvals_F(r,1)] = computeMeasure(X_pw_ar1,Y_pw_ar1,W_pw_ar1,...
                                         'test','exact','varianceEstimator','none');
     catch
@@ -243,7 +250,9 @@ for r = 1:config.R
     end
     
     try
+      tic;
       [X_pw_arma11,Y_pw_arma11,W_pw_arma11] = prewhitenARMA(X,Y,W,1,1,true);
+      pw_timer(r,2) = toc;
       [~,pvals_F(r,2)] = computeMeasure(X_pw_arma11,Y_pw_arma11,W_pw_arma11,...
                                         'test','exact','varianceEstimator','none');
     catch
@@ -251,7 +260,9 @@ for r = 1:config.R
     end
     
     try
+      tic;
       [X_pw_arp,Y_pw_arp,W_pw_arp,pw_ar_orders(r)] = prewhitenAR(X,Y,W);
+      pw_timer(r,3) = toc;
       [~,pvals_F(r,3)] = computeMeasure(X_pw_arp,Y_pw_arp,W_pw_arp,...
                                         'test','exact','varianceEstimator','none');
     catch
@@ -259,7 +270,9 @@ for r = 1:config.R
     end
     
     try
+      tic;
       [X_pw_armapq,Y_pw_armapq,W_pw_armapq,pw_arma_orders(r,:)] = prewhitenARMA(X,Y,W,config.arma_p_max,config.arma_q_max,false);
+      pw_timer(r,4) = toc;
       [~,pvals_F(r,4)] = computeMeasure(X_pw_armapq,Y_pw_armapq,W_pw_armapq,...
                                         'test','exact','varianceEstimator','none');
     catch

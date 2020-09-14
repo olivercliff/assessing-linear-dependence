@@ -1,32 +1,26 @@
-function [X_tilde,Y_tilde,W_tilde,p] = prewhitenAR(X,Y,W,M)
+function [X_tilde,Y_tilde,W_tilde,p] = prewhitenAR(X,Y,W,p)
 % Takes in two vectors, X and Y, (optionally a third, W) and outputs the
 % pre-whitened time series (based on the AR(p) model of X)
 
 % Get the model order
-if nargin > 3
-  p = order(X,M);
+if nargin < 4
+  [p,pacf] = order(X);
+  Mdl = arima('AR',pacf);
 else
-  p = order(X);
+  Mdl = arima(p,0,0);
 end
 
-% Embed time series and infer AR parameters
-[Xf,Xp,Yp] = embed(X,p,Y,p);
-Yf = Y(p+1:end);
+% infer AR parameters
+Mdl = estimate(Mdl,X,'Display','off');
 
-XpC = [ones(size(Xp,1),1), Xp];
-YpC = [ones(size(Xp,1),1), Yp];
-
-pi_B = XpC\Xf;
-
-X_tilde = Xf - XpC*pi_B;
-Y_tilde = Yf - YpC*pi_B;
+% Take residuals
+X_tilde = infer(Mdl,X);
+Y_tilde = infer(Mdl,Y);
 
 if nargin > 2 || isempty(W)
   W_tilde = zeros(size(X_tilde,1),size(W,2));
   for i = 1:size(W,2)
-    [Wf,Wp] = embed(W(:,i),p);
-    WpC = [ones(size(Xp,1),1), Wp];
-    W_tilde(:,i) = Wf - WpC*pi_B;
+    W_tilde(:,i) = infer(Mdl,W(:,i));
   end
 else
   W_tilde = [];

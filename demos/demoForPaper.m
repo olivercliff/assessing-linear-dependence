@@ -1,8 +1,10 @@
 
 % Choose settings from the paper (or '' for your own custom configuration)
 % myfig = '8b';
-myfig = '11b';
+myfig = '10a';
 exp = 2;
+
+addpath ../utils/
 
 if isempty(myfig)
   config.T = 2^5; % Dataset length

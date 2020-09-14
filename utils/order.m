@@ -1,4 +1,4 @@
-function p = order(Z,num_lags)
+function [p,pacf] = order(Z,num_lags)
 %EMBED Embed the past of vector AR process.
 %   P = ORDER(X) returns the optimal AR order P of the the N-by-K matrix X
 %   using the first partial autocorrelation that is less than 1.96/sqrt(N) or
@@ -48,30 +48,27 @@ if nargin == 1
 end
 
 ps = zeros(D,1);
+pacf = cell(D);
 for i = 1:D
   X = Z(:,i);
-  alpha = zeros(num_lags,1);
   
-  % Yule-walker approach is better for memory since we're iteratively solving it
-  acf = autocorr(X,num_lags);
-
-  for l = 1:num_lags
-     AR = toeplitz(acf(1:l))\acf(2:(l+1));
-     alpha(l) = AR(end);
-     if abs(alpha(l)) <= 1.96/sqrt(T-l)
-      cp = l-1;
-      break;
-    end
-  end
+  % Burg's approach is better at parameter estimation
+  [~,~,k] = arburg(X,num_lags);
+  cp = find(abs(k) - 1.96./sqrt(T:-1:(T-num_lags+1))' < 0, 1);
 
   if isempty(cp)
     ps(i) = num_lags;
   else
     ps(i) = cp;
+    pacf{i} = k(1:cp).*-1;
   end
 end
 p = max(ps);
 
 if p == 0
   p = 1;
+end
+
+if D == 1
+  pacf = pacf{1};
 end

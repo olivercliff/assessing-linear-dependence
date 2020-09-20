@@ -233,7 +233,7 @@ for r = 1:config.R
   
   % Our modified F-test
   tic;
-  [measure,pvals_E(r),~,stats] = computeMeasure(X,Y,W,'test','exact','taperMethod','tukey');
+  [measure,pvals_E(r),~,stats] = computeMeasure(X,Y,W,'test','lambda','taperMethod','tukey');
   timer(r) = toc;
   eta_mean(r) = mean(diag(stats.N_e));
   
@@ -244,7 +244,7 @@ for r = 1:config.R
       [X_pw_ar1,Y_pw_ar1,W_pw_ar1] = prewhitenAR(X,Y,W,1);
       pw_timer(r,1) = toc;
       [~,pvals_F(r,1)] = computeMeasure(X_pw_ar1,Y_pw_ar1,W_pw_ar1,...
-                                        'test','exact','varianceEstimator','none');
+                                        'test','finite');
     catch
       warning('Run %i failed to learn AR(1) model\n',r);
     end
@@ -254,7 +254,7 @@ for r = 1:config.R
       [X_pw_arma11,Y_pw_arma11,W_pw_arma11] = prewhitenARMA(X,Y,W,1,1,true);
       pw_timer(r,2) = toc;
       [~,pvals_F(r,2)] = computeMeasure(X_pw_arma11,Y_pw_arma11,W_pw_arma11,...
-                                        'test','exact','varianceEstimator','none');
+                                        'test','finite');
     catch
       warning('Run %i failed to learn ARMA(1,1) model\n',r);
     end
@@ -264,7 +264,7 @@ for r = 1:config.R
       [X_pw_arp,Y_pw_arp,W_pw_arp,pw_ar_orders(r)] = prewhitenAR(X,Y,W);
       pw_timer(r,3) = toc;
       [~,pvals_F(r,3)] = computeMeasure(X_pw_arp,Y_pw_arp,W_pw_arp,...
-                                        'test','exact','varianceEstimator','none');
+                                        'test','finite');
     catch
       warning('Run %i failed to learn AR(p) model\n',r);
     end
@@ -274,7 +274,7 @@ for r = 1:config.R
       [X_pw_armapq,Y_pw_armapq,W_pw_armapq,pw_arma_orders(r,:)] = prewhitenARMA(X,Y,W,config.arma_p_max,config.arma_q_max,false);
       pw_timer(r,4) = toc;
       [~,pvals_F(r,4)] = computeMeasure(X_pw_armapq,Y_pw_armapq,W_pw_armapq,...
-                                        'test','exact','varianceEstimator','none');
+                                        'test','finite');
     catch
       warning('Run %i failed to learn ARMA(p,q) model\n',r);
     end
@@ -283,7 +283,7 @@ for r = 1:config.R
     
     if univariate
       % F-test
-      pvals_F(r) = significance(measure,stats,'test','exact','varianceEstimator','none');
+      pvals_F(r) = significance(measure,stats,'test','finite');
     end
   end
   

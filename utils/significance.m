@@ -63,7 +63,7 @@ parser = parseParameters(parser,estimate,stats,varargin{:});
 S = parser.Results.surrogates;
 
 
-if strcmp(parser.Results.test,'asymptotic') || strcmp(parser.Results.test,'standard')
+if strcmp(parser.Results.test,'asymptotic')
   
   if stats.cmi
     % LR statistic is 2 * nested log ratio * numer of samples (removed the
@@ -88,7 +88,29 @@ if strcmp(parser.Results.test,'asymptotic') || strcmp(parser.Results.test,'stand
   end
   
 % (Our) exact test
-elseif strcmp(parser.Results.test,'exact')
+elseif strcmp(parser.Results.test,'finite')
+  
+  % Monte carlo sample the F/t-distributed random variables
+  stats.d_2 = stats.N_o - stats.cs - 2;
+  
+  l_rvs = zeros(S,stats.dof);
+  for i = 1:stats.dof
+    l_rvs(:,i) = trnd(stats.d_2(i),[S,1]).^2 ./ stats.d_2(i);
+  end
+  
+  dist = log(l_rvs + 1 );
+  dist = sum(dist,2);
+    
+  estimate = 2*stats.to_cmi(estimate);
+    
+    % Proportion of surrogates less than statistic
+  pval = mean(estimate<=dist);
+    
+  if nargout > 1
+    dist = sort(dist);
+  end
+      
+elseif strcmp(parser.Results.test,'lambda')
   
   switch parser.Results.varianceEstimator
     case 'none'

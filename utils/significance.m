@@ -1,4 +1,4 @@
-function [pval,dist] = significance(estimate,stat,varargin)
+function [pval,dist] = significance(estimate,stats,varargin)
 %SIGNIFICANCE Significance testing for linear-dependence measures.
 %   PVAL = SIGNIFICANCE(ESTIMATE,STATS) returns PVAL, the p-value for the
 %   scalar ESTIMATE and statistics STATS using our exact hypothesis tests.
@@ -24,6 +24,8 @@ function [pval,dist] = significance(estimate,stat,varargin)
 %                                     (N.B. this needs a measure to be run
 %                                     with param 'multivariateBartlett' set
 %                                     to true.)
+%          'RV'                       Which random variables to use
+%                                     (F-distributed or beta-distributed)
 %
 %   See also <a href="matlab:help mvmi">mvmi</a>, <a href="matlab:help mvgc">mvgc</a>, <a href="matlab:help pcd">pcd</a>
 
@@ -54,33 +56,34 @@ parser = inputParser;
 
 addRequired(parser,'estimate',@isnumeric);
 addRequired(parser,'stat',@isstruct);
+addOptional(parser,'RV','B',@(x) any(validatestring(x,{'F','B'})));
 
-parser = parseParameters(parser,estimate,stat,varargin{:});
+parser = parseParameters(parser,estimate,stats,varargin{:});
 
 S = parser.Results.surrogates;
 
 
 if strcmp(parser.Results.test,'asymptotic') || strcmp(parser.Results.test,'standard')
   
-  if stat.cmi
+  if stats.cmi
     % LR statistic is 2 * nested log ratio * numer of samples (removed the
     % order of autoregression)
-    estimate = 2*stat.to_cmi(estimate);
+    estimate = 2*stats.to_cmi(estimate);
 
     % Get p-value from quantile function of chi-squared dist
-    pval = 1-chi2cdf(estimate*stat.N_o,stat.dof);
+    pval = 1-chi2cdf(estimate*stats.N_o,stats.dof);
 
     if nargout > 1
-      dist = chi2inv(linspace(0,1,S),stat.dof)./stat.N_o;
+      dist = chi2inv(linspace(0,1,S),stats.dof)./stats.N_o;
     end
   else
-    t = estimate.*sqrt((stat.N_o-2)./(1-estimate.^2));
+    t = estimate.*sqrt((stats.N_o-2)./(1-estimate.^2));
 
     % Get p-value from quantile function of F-dist
-    pval = fcdf(t^2,1,stat.N_o-2);
+    pval = fcdf(t^2,1,stats.N_o-2);
     
     if nargout > 1
-      dist = tinv(linspace(0,1,S),stat.N_o-2)./sqrt(stat.N_o-2);
+      dist = tinv(linspace(0,1,S),stats.N_o-2)./sqrt(stats.N_o-2);
     end
   end
   
@@ -96,7 +99,7 @@ elseif strcmp(parser.Results.test,'exact')
       correction = 2;
   end
 
-  if correction > 1 && ~stat.mv
+  if correction > 1 && ~stats.mv
     warning('Roy''s correction only available if CMI is computed with full multivariate setting. Use, e.g., MVMI(X,Y,W,''multivariateBartlett'',true)\n');
   end
 
@@ -106,35 +109,42 @@ elseif strcmp(parser.Results.test,'exact')
   % Bartlett-corrected effective sample size
   if correction > 0
 %     stat.d_2 = stat.N_o ./ diag(stat.var_r);
-    stat.d_2 = diag(stat.N_e);
+    stats.d_2 = diag(stats.N_e);
   else
-    stat.d_2 = stat.N_o;
+    stats.d_2 = stats.N_o;
   end
-  stat.d_2 = stat.d_2 - stat.cs - 2;
+  stats.d_2 = stats.d_2 - stats.cs - 2;
 
-  if any(stat.d_2 < 1)
-    sum_lt1 = sum(stat.d_2 < 1);
+  if any(stats.d_2 < 1)
+    sum_lt1 = sum(stats.d_2 < 1);
     warning('%d Effective DOF < 1 (%s).\n',...
-              sum_lt1, mat2str(stat.d_2(stat.d_2 < 1)));
+              sum_lt1, mat2str(stats.d_2(stats.d_2 < 1)));
   end
   
   % Compute p-value
-  if stat.cmi
+  if stats.cmi
     
-    % Monte carlo sample the t-distributed random variables
-    t_rvs = zeros(S,stat.dof);
-    for i = 1:stat.dof
-      t_rvs(:,i) = trnd(stat.d_2(i),[S,1]);
+    l_rvs = zeros(S,stats.dof);
+    if parser.Results.RV == 'F'
+      % Monte carlo sample the F/t-distributed random variables
+      l_rvs = zeros(S,stats.dof);
+      for i = 1:stats.dof
+        t_rvs = trnd(stats.d_2(i),[S,1]);
+        l_rvs(:,i) = stats.d_2(i) ./ (stats.d_2(i) + t_rvs.^2);
+      end
+    else
+      % Monte carlo sample the beta-distributed random variables
+      for i = 1:stats.dof
+        l_rvs(:,i) = betarnd(stats.d_2(i)/2,1/2,[S,1]);
+      end
     end
     
-    % Conditional mutual information (sums of log-F dist. RVs)
-    f_rvs = t_rvs.^2;
-    logf_rvs = log(f_rvs./stat.d_2'+1);
-    dist = sum(logf_rvs,2);
-    estimate = 2*stat.to_cmi(estimate);
+    dist = prod(l_rvs,2);
+    
+    estimate = exp(-2*stats.to_cmi(estimate));
     
     % Proportion of surrogates less than statistic
-    pval = mean( estimate <= dist );
+    pval = mean(estimate<=dist);
     
     if nargout > 1
       dist = sort(dist);
@@ -143,7 +153,7 @@ elseif strcmp(parser.Results.test,'exact')
     
     % Sum the partial correlations
     r = estimate;
-    nu = stat.d_2;
+    nu = stats.d_2;
     
     % Compute t-stat...
     t = r.*sqrt((nu)./(1-r.^2));
@@ -152,7 +162,7 @@ elseif strcmp(parser.Results.test,'exact')
     pval = fcdf(t^2,1,nu);
     
     if nargout > 1
-      dist = tinv(linspace(0,1,S),stat.d_2)./sqrt(stat.d_2);
+      dist = tinv(linspace(0,1,S),stats.d_2)./sqrt(stats.d_2);
     end
   end
 end

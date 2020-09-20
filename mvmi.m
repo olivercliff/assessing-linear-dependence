@@ -95,6 +95,7 @@ if nargout > 1
   
   % Outputs for computing the significance (variance estimation and number of
   % condtiionals)
+  stats.pr = pr;
   stats.var_r = var_r;
   stats.N_e = N_e;
   stats.cs = cs;

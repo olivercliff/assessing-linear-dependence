@@ -28,6 +28,7 @@ close all
 
 if ~exist('granger_causality.m','file')
   addpath('..');
+  addpath('../utils/');
 end
 
 % Download the HCP data (if it's not already there)
@@ -85,10 +86,10 @@ end
 % - 3: GC, optimal embedding
 % - 4: GC, high embedding
 % - 5: GC with MV dim 2 (not in paper)
-which_test = 3;
+which_test = 4;
 
 % Do you want to use the F-test or the asymptotic LR (chi^2) test 
-f_test = true;
+f_test = false;
 
 switch which_test
   case 1
@@ -208,20 +209,28 @@ for r = 1:R
   X = X(:,seq)';
   Y = Y(:,seq)';
   
+  if dims == 1
+    try
+      [X_pw,Y_pw,W_pw] = prewhitenAR(X,Y,W);
+    catch
+      X_pw = X; Y_pw = Y; W_pw = W;
+    end
+  end
+  
   % Compute our measures
   if is_granger
     [measure(r),pvals_E(r)] = mvgc(X,Y,W,'p',config.p,'q',config.q,'test','exact','surrogates',surrogates);
     [~,pvals_LR(r)] = mvgc(X,Y,W,'p',config.p,'q',config.q,'test','asymptotic');
     
     if dims == 1
-      [measure_pw(r),pvals_LR_pw(r)] = mvgc(X,Y,W,'p',config.p,'q',config.q,'test','asymptotic');
+      [measure_pw(r),pvals_LR_pw(r)] = mvgc(X_pw,Y_pw,W_pw,'p',config.p,'q',config.q,'test','asymptotic');
     end
   else
     [measure(r),pvals_E(r)] = mvmi(X,Y,W,'test','exact','surrogates',surrogates);
     [measure(r),pvals_LR(r)] = mvmi(X,Y,W,'test','asymptotic');
     
     if dims == 1
-      [measure_pw(r),pvals_LR_pw(r)] = mvgc(X,Y,W,'test','asymptotic');
+      [measure_pw(r),pvals_LR_pw(r)] = mvgc(X_pw,Y_pw,W_pw,'test','asymptotic');
     end
   end
   
@@ -244,13 +253,16 @@ ph2 = plot(sort(pvals_E),linspace(0,1,R), '-', 'color', col_E, 'linewidth', 1);
 ph3 = plot(sort(pvals_LR_pw),linspace(0,1,R), '--', 'color', col_LR, 'linewidth', 1);
 
 if f_test
-  legend([ph1 ph2],'Standard F-test', 'Exact test','location', 'best');
+  legend([ph1 ph2],'Standard F-test', 'Modified $F$-test','location', 'best','interpreter','latex');
 else
-  legend([ph1 ph2],'LR test', 'Exact test','location', 'best');
+  legend([ph1 ph2],'$\chi^2$-test', 'Modified $F$-test','location', 'best','interpreter','latex');
 end
 
-fprintf('LR test FPR at %.2f: %.4g\n', alpha, mean(pvals_LR <= alpha) );
 fprintf('Exact test FPR at %.2f: %.4g\n', alpha, mean(pvals_E <= alpha) );
+fprintf('LR test FPR at %.2f: %.4g\n', alpha, mean(pvals_LR <= alpha) );
+if dims == 1
+  fprintf('LR test (after prewhitening) FPR at %.2f: %.4g\n', alpha, mean(pvals_LR_pw <= alpha) );
+end
 
 if generate_tikz
   if ~exist('tikz','dir')

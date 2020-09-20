@@ -246,7 +246,7 @@ for r = 1:config.R
       [~,pvals_F(r,1)] = computeMeasure(X_pw_ar1,Y_pw_ar1,W_pw_ar1,...
                                         'test','exact','varianceEstimator','none');
     catch
-      warning('Run %i failed to learn AR(1,1) model\n',r);
+      warning('Run %i failed to learn AR(1) model\n',r);
     end
     
     try
@@ -328,11 +328,11 @@ if plot_results
   ph(1) = plot(sort(pvals_E),linspace(0,1,config.R), '-', 'color', col_E, 'linewidth', 1);
   ph(2) = plot(sort(pvals_chi2),linspace(0,1,config.R), '--', 'color', col_LR, 'linewidth', 1);
   
-  labels{1} = 'Exact test';
+  labels{1} = 'Modified $\Lambda$-test';
   labels{2} = '$\chi^2$-test';
 
-  fprintf('Exact test FPR at %d%% significance: %.3g\n', config.alpha*100, mean(pvals_E <= config.alpha) );
-  fprintf('Chi-square test FPR at %d%% significance: %.3g\n', config.alpha*100, mean(pvals_chi2 <= config.alpha) );
+  fprintf('Modified Lambda-test FPR at %d%% significance: %.3g\n', config.alpha*100, mean(pvals_E <= config.alpha) );
+  fprintf('chi2-test FPR at %d%% significance: %.3g\n', config.alpha*100, mean(pvals_chi2 <= config.alpha) );
   if univariate
     ph(3) = plot(sort(pvals_F),linspace(0,1,config.R), '-', 'color', col_LR, 'linewidth', 1);
     

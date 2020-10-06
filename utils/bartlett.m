@@ -27,7 +27,8 @@ v = zeros(dim);
 
 % Select cut-off for ACF/tapering
 if nargin < 4
-  M = ceil(2*sqrt(N));
+%   M = ceil(2*sqrt(N));
+  M = N-2;
 end
 
 % Set up tapering

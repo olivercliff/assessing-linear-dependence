@@ -1,8 +1,7 @@
 function [p,pacf] = order(Z,num_lags)
 %EMBED Embed the past of vector AR process.
 %   P = ORDER(X) returns the optimal AR order P of the the N-by-K matrix X
-%   using the first partial autocorrelation that is less than 1.96/sqrt(N) or
-%   round(N/3), whichever comes first.
+%   using P computed from Burg's method or round(N/3), whichever is lower.
 %
 %   Example:
 %     % Infer optimal history lengths p and q, then compute the transfer entropy

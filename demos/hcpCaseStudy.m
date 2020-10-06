@@ -31,8 +31,16 @@ if ~exist('granger_causality.m','file')
   addpath('../utils/');
 end
 
+rest = false;
+prewhiten = false;
+
 % Download the HCP data (if it's not already there)
-datafile = './data/hcp_rsfMRI.mat';
+if rest
+  datafile = './data/hcp_rsfMRI.mat';
+else
+  datafile = './data/hcp_tfMRI.mat';
+end
+
 if ~exist(datafile,'file')
   article_url = '<a href = "https://figshare.com/articles/hcp_rsfMRI_mat/12084636">https://figshare.com/articles/hcp_rsfMRI_mat/12084636</a>';
   download_url = 'https://ndownloader.figshare.com/files/22217589';
@@ -86,7 +94,7 @@ end
 % - 3: GC, optimal embedding
 % - 4: GC, high embedding
 % - 5: GC with MV dim 2 (not in paper)
-which_test = 4;
+which_test = 3;
 
 % Do you want to use the F-test or the asymptotic LR (chi^2) test 
 f_test = false;
@@ -134,7 +142,11 @@ generate_tikz = false;
 R = 1000; % Number of trials
 surrogates = 5000; % MC sample size
 alpha = 0.05; % Significance level
-seq = 201:1000; % Sequence of the data to take (cut off first+last 200)
+if rest
+  seq = 201:1000; % Sequence of the data to take (cut off first+last 200)
+else
+  seq = 50:380; % Sequence of the data to take (cut off first+last 200)
+end
 
 to_filter = 2; % Filter the BOLD data? (1 = FIR, 2 = IIR)
 
@@ -209,7 +221,7 @@ for r = 1:R
   X = X(:,seq)';
   Y = Y(:,seq)';
   
-  if dims == 1
+  if prewhiten && dims == 1
     try
       [X_pw,Y_pw,W_pw] = prewhitenAR(X,Y,W);
     catch
@@ -219,17 +231,17 @@ for r = 1:R
   
   % Compute our measures
   if is_granger
-    [measure(r),pvals_E(r)] = mvgc(X,Y,W,'p',config.p,'q',config.q,'test','exact','surrogates',surrogates);
+    [measure(r),pvals_E(r)] = mvgc(X,Y,W,'p',config.p,'q',config.q,'test','lambda','surrogates',surrogates);
     [~,pvals_LR(r)] = mvgc(X,Y,W,'p',config.p,'q',config.q,'test','asymptotic');
     
-    if dims == 1
+    if prewhiten && dims == 1
       [measure_pw(r),pvals_LR_pw(r)] = mvgc(X_pw,Y_pw,W_pw,'p',config.p,'q',config.q,'test','asymptotic');
     end
   else
-    [measure(r),pvals_E(r)] = mvmi(X,Y,W,'test','exact','surrogates',surrogates);
+    [measure(r),pvals_E(r)] = mvmi(X,Y,W,'test','lambda','surrogates',surrogates);
     [measure(r),pvals_LR(r)] = mvmi(X,Y,W,'test','asymptotic');
     
-    if dims == 1
+    if prewhiten && dims == 1
       [measure_pw(r),pvals_LR_pw(r)] = mvgc(X_pw,Y_pw,W_pw,'test','asymptotic');
     end
   end

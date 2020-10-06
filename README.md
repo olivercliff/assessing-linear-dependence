@@ -1,7 +1,7 @@
-# Exact Inference of Linear Dependence
+# Assessing the significance of directed and multivariate dependence measures
 Copyright (C) 2020 Oliver Cliff.
 
-This repository provides MATLAB functions for the exact inference of linear dependence between multiple autocorrelated time series. This includes various linear-dependence measures and the hypothesis tests for inferring their significance, all discussed in the paper found here:
+This repository provides MATLAB functions for computing and assessing the linear dependence between multiple autocorrelated time series. This includes various linear-dependence measures and the hypothesis tests for inferring their significance, all discussed in the paper found here:
 
 [https://arxiv.org/abs/2003.03887](https://arxiv.org/abs/2003.03887)
 
@@ -12,8 +12,8 @@ The code is licensed under the [GNU GPL v3 license](http://www.gnu.org/licenses/
 # Getting started
 1. Ensure you have MATLAB's [Econometrics Toolbox](https://www.mathworks.com/products/econometrics.html) and [Signal Processing Toolbox](https://www.mathworks.com/products/signal.html) downloaded and installed (for the autocorrelation and filtering functions).
 2. Clone (or download) the repository.
-2. Documentation found in help for each function. The main functions used are *mvmi.m* (**multivariate mutual information**), *mvgc.m* (**multivariate Granger causality**), and *pcorr.m* (**Pearson correlation**). All three allow adding a conditional process and can optionally output a *p*-value by using the *significance.m* function. The *p*-values are either generated from the standard/asymptotic tests (i.e., the **likelihood-ratio tests** and **Student's t-test**), or the **exact tests** we derive in our paper.
-3. Demos are included in the *demos* subfolder, including all experiments from the paper. Start with *demos/demoForPaper.m* or *demos/hcpCaseStudy.m* to see all the results from the paper. As an example of Bartlett-correcting hypothesis tests for **Pearson correlation**, we have also included a demo on inferring cross-correlations between *univariate* autocorrelated processes in *demos/demoCrossCorr.m*.
+2. Documentation found in help for each function. The main functions used are *mvmi.m* (**multivariate mutual information**), *mvgc.m* (**multivariate Granger causality**), and *pcorr.m* (**Pearson correlation**). All three allow adding a conditional process and can optionally output a *p*-value by using the *significance.m* function. The *p*-values are either generated from the standard/asymptotic tests (i.e., the **chi-square tests** and **Student's t-test**), or the **modified lambda-tests** we derive in our paper.
+3. Demos are included in the *demos* subfolder, including all experiments from the paper. Start with *demos/demoForPaper.m* or *demos/hcpCaseStudy.m* to see all the results from the paper. As an example of modifying Student's t-tests for **Pearson correlation**, we have also included a demo on inferring cross-correlations between *univariate* autocorrelated processes in *demos/demoCrossCorr.m*.
 
 # Citation
 Please **cite** your use of this code as:

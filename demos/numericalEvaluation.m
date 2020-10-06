@@ -207,8 +207,15 @@ for r = 1:config.R
     W = [];
   else
     Z = Sigma*randn(M,config.T);
-    for t = 2:config.T
-      Z(:,t) = Phi*Z(:,t-1) + Z(:,t);
+    if config.ar
+      for t = 2:config.T
+        Z(:,t) = Phi*Z(:,t-1) + Z(:,t);
+      end
+    elseif config.lm
+      Z(:,1) = rand(M,1);
+      for t = 2:config.T
+        Z(:,t) = config.r.*Z(:,t-1).*(1-Z(:,t-1));
+      end
     end
 
     % Partition the dataset (Z) into multiple time series (X,Y, and conditional W)

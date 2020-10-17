@@ -28,7 +28,7 @@ clear
 close all
 
 if ~exist('granger_causality.m','file')
-  addpath('..');
+  addpath(genpath('../'));
 end
 
 %% Set up some parameters

@@ -15,13 +15,14 @@ function [cmi,pval,dist,stats] = mvmi(X,Y,varargin)
 %   parameters and their values.  Valid parameters are the following:
 %
 %         Parameter                   Value
-%          'test'                     'exact' (the default) uses a
-%                                     Bartlett-corrected Student's t-test,
-%                                     'standard' uses the typical two-tail
-%                                     t-test.
-%          'surrogates'               Numeric denoting the number of
+%          'test'                     'modified' (the default) uses our
+%                                     modified lambda-test,
+%                                     'finite' uses the F-test, and
+%                                     'asymptotic' uses the chi-square
+%                                     test
+%          'surrogates'               Integer denoting the number of
 %                                     surrogates used in generating the
-%                                     exact null distributions.
+%                                     numerical null distributions.
 %          'varianceEstimator'        'bartlett' (default) uses Bartlett's
 %                                     formula assuming no
 %                                     cross-correlations, 'roy' makes no

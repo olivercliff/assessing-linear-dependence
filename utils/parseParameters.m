@@ -1,7 +1,7 @@
 function parser = parseParameters(parser,varargin)
 
-addParameter(parser,'test','exact',...
-                @(x) any(validatestring(x,{'asymptotic','finite','lambda'})));
+addParameter(parser,'test','modified',...
+                @(x) any(validatestring(x,{'asymptotic','finite','modified'})));
               
 addParameter(parser,'varianceEstimator','bartlett',...
                 @(x) any(validatestring(x,{'none','bartlett','roy'})));

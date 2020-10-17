@@ -10,13 +10,13 @@ function [pval,dist] = significance(estimate,stats,varargin)
 %   following:
 %
 %         Parameter                   Value
-%          'test'                     'exact' (the default) uses a
-%                                     Bartlett-corrected Student's t-test,
+%          'test'                     'modified' (the default) uses our
+%                                     modified lambda-test,
 %                                     'standard' uses the typical two-tail
 %                                     t-test.
-%          'surrogates'               Numeric denoting the number of
+%          'surrogates'               Integer denoting the number of
 %                                     surrogates used in generating the
-%                                     exact null distributions.
+%                                     numerical null distributions.
 %          'varianceEstimator'        'bartlett' (default) uses Bartlett's
 %                                     formula assuming no
 %                                     cross-correlations, 'roy' makes no
@@ -110,7 +110,7 @@ elseif strcmp(parser.Results.test,'finite')
     dist = sort(dist);
   end
       
-elseif strcmp(parser.Results.test,'lambda')
+elseif strcmp(parser.Results.test,'modified')
   
   switch parser.Results.varianceEstimator
     case 'none'

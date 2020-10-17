@@ -20,13 +20,14 @@ function [F,pval,dist,stats] = mvgc(X,Y,varargin)
 %          'q'                        'auto' (the default) uses automatic
 %                                     embedding, otherwise input the
 %                                     desired history length as a string
-%          'test'                     'exact' (default) uses a
-%                                     Bartlett-corrected Student's t-test,
-%                                     'standard' uses the typical two-tail
-%                                     t-test.
-%          'surrogates'               Numeric denoting the number of
+%          'test'                     'modified' (the default) uses our
+%                                     modified lambda-test,
+%                                     'finite' uses the F-test, and
+%                                     'asymptotic' uses the chi-square
+%                                     test
+%          'surrogates'               Integer denoting the number of
 %                                     surrogates used in generating the
-%                                     exact null distributions.
+%                                     numerical null distributions.
 %          'varianceEstimator'        'bartlett' (default) uses Bartlett's
 %                                     formula assuming no
 %                                     cross-correlations, 'roy' makes no

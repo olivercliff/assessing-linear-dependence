@@ -10,7 +10,7 @@
 
 addpath ..
 
-causal = false; % Causal influence from Y to X
+causal = true; % Causal influence from Y to X
 lag = 10; % Which lag is this influence at?
 
 ar = true; % Are processes autoregressive?
@@ -120,7 +120,7 @@ for u = lag_seq
   quants(u,1) = cdist(upper_quant_id);
   quants(u,2) = cdist(lower_quant_id);
   
-  [~,cdistm] = significance(C(u),stat,'surrogates',S,'test','standard');
+  [~,cdistm] = significance(C(u),stat,'surrogates',S,'test','finite');
   quantsm(u,1) = cdistm(upper_quant_id);
   quantsm(u,2) = cdistm(lower_quant_id);
   
@@ -154,7 +154,7 @@ axis tight;
 xlabel('Lag');
 ylabel('Corr');
 title('Cross-correlations');
-legend([ph1 ph2 ph3 ph phm],'Matlab xcorr','Matlab corr','Our corr','threshold exact','treshold standard');
+legend([ph1 ph2 ph3 ph phm],'Matlab xcorr','Matlab corr','Our corr','threshold modified t-test','threshold t-test');
 
 figure;
 hold on;
@@ -172,9 +172,9 @@ axis tight;
 xlabel('Lag');
 ylabel('P-value');
 title('P-values');
-legend([ph1 ph2 ph],'t-test','exact','threshold');
+legend([ph1 ph2 ph],'t-test','modified','threshold');
 
 if ~causal
-  fprintf('FPR for exact t-test: %.2f\n', mean(pval<=alpha)); 
-  fprintf('FPR for standard t-test: %.2f\n', mean(pvalm<=alpha)); 
+  fprintf('FPR for modified t-test: %.2f\n', mean(pval<=alpha)); 
+  fprintf('FPR for t-test: %.2f\n', mean(pvalm<=alpha)); 
 end

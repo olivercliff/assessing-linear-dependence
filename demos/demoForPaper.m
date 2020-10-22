@@ -1,7 +1,7 @@
 
 % Choose settings from the paper (or '' for your own custom configuration)
-myfig = '';
-exp = 3;
+myfig = '8a';
+exp = 1;
 
 addpath ../utils/
 

@@ -14,8 +14,9 @@ function [coeff,pval,dist,stats] = pcorr(X,Y,varargin)
 %
 %         Parameter                   Value
 %          'test'                     'modified' (the default) uses our
-%                                     modified lambda-test,
-%                                     'finite' uses the two-tailed t-test.
+%                                     modified t-test,
+%                                     'finite' or 'asymptotic'
+%                                     uses the two-tailed t-test.
 %          'surrogates'               Integer denoting the number of
 %                                     surrogates used in generating the
 %                                     numerical null distributions.
@@ -41,7 +42,7 @@ function [coeff,pval,dist,stats] = pcorr(X,Y,varargin)
 %     X = randn(100,1);
 %     Y = randn(100,1);
 %     [PR,PVAL] = PCORR(X,Y)
-%     [PR,PVAL] = PCORR(X,Y,'test','standard')
+%     [PR,PVAL] = PCORR(X,Y,'test','finite')
 
 % ------------------------------------------------------------------------------
 % Copyright (C) 2020, Oliver M. Cliff <oliver.m.cliff@gmail.com>,

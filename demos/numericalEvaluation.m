@@ -240,7 +240,7 @@ for r = 1:config.R
   
   % Our modified F-test
   tic;
-  [measure,pvals_E(r),~,stats] = computeMeasure(X,Y,W,'test','lambda','taperMethod','tukey');
+  [measure,pvals_E(r),~,stats] = computeMeasure(X,Y,W,'test','modified','taperMethod','tukey');
   timer(r) = toc;
   eta_mean(r) = mean(diag(stats.N_e));
   

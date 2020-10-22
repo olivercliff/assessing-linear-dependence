@@ -12,8 +12,9 @@ function [pval,dist] = significance(estimate,stats,varargin)
 %         Parameter                   Value
 %          'test'                     'modified' (the default) uses our
 %                                     modified lambda-test,
-%                                     'standard' uses the typical two-tail
-%                                     t-test.
+%                                     'finite' uses the typical two-tail
+%                                     t-test and 'asymptotic uses the
+%                                     chi-squared test.
 %          'surrogates'               Integer denoting the number of
 %                                     surrogates used in generating the
 %                                     numerical null distributions.
@@ -63,7 +64,7 @@ parser = parseParameters(parser,estimate,stats,varargin{:});
 S = parser.Results.surrogates;
 
 
-if strcmp(parser.Results.test,'asymptotic')
+if (~stats.cmi && ~strcmp(parser.Results.test,'modified')) || strcmp(parser.Results.test,'asymptotic')
   
   if stats.cmi
     % LR statistic is 2 * nested log ratio * numer of samples (removed the

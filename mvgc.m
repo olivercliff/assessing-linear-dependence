@@ -24,7 +24,7 @@ function [F,pval,dist,stats] = mvgc(X,Y,varargin)
 %                                     modified lambda-test,
 %                                     'finite' uses the F-test, and
 %                                     'asymptotic' uses the chi-square
-%                                     test
+%                                     test.
 %          'surrogates'               Integer denoting the number of
 %                                     surrogates used in generating the
 %                                     numerical null distributions.
@@ -49,7 +49,7 @@ function [F,pval,dist,stats] = mvgc(X,Y,varargin)
 %     X = randn(100,5);
 %     Y = randn(100,3);
 %     [F,pval_exact] = MVGC(X,Y);
-%     [F,pval_LR] = MVGC(X,Y,'test','standard');
+%     [F,pval_LR] = MVGC(X,Y,'test','finite');
 %
 %   See also <a href="matlab:help order">order</a>, <a href="matlab:help mvmi">mvmi</a>, <a href="matlab:help pcd">pcd</a>
 

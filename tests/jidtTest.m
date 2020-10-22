@@ -31,102 +31,107 @@ if ~exist('granger_causality.m','file')
   addpath(genpath('../'));
 end
 
+javaaddpath('infodynamics.jar');
+
 %% Set up some parameters
 % Choose which measure we want to check:
 test_options = {'mi','cmi','mvmi','gc','mvgc'};
-which_test = 'gc'; % Or use, e.g., which_test = test_options{4};
 
-test_id = find(strcmp(test_options,which_test));
-if isempty(test_id)
-  error('Choose one of the following tests: {%s, %s, %s, %s, %s}\n', test_options{:});
+for tt = 1:length(test_options)
+  which_test = test_options{tt}; % Or use, e.g., which_test = test_options{4};
+
+  test_id = find(strcmp(test_options,which_test));
+  if isempty(test_id)
+    error('Choose one of the following tests: {%s, %s, %s, %s, %s}\n', test_options{:});
+  end
+
+  % Choose the sample length and RNG (if wanted)
+  T = 1000; % Number of samples
+  seed = 'shuffle'; % RNG seed
+
+  %% Set up the calculators
+  switch test_id
+    case {1,3}
+      calc = javaObject('infodynamics.measures.continuous.gaussian.MutualInfoCalculatorMultiVariateGaussian');
+    case 2
+      calc = javaObject('infodynamics.measures.continuous.gaussian.ConditionalMutualInfoCalculatorMultiVariateGaussian');
+    case {4,5}
+      calc = javaObject('infodynamics.measures.continuous.gaussian.TransferEntropyCalculatorMultiVariateGaussian');
+  end
+
+  if test_id < 4
+    computeMeasure = @(X,Y,W) mvmi(X,Y,W,'test','asymptotic');
+  else
+    computeMeasure = @(X,Y,W) mvgc(X,Y,W,'p','auto','q','auto','test','asymptotic');
+  end
+
+  %% Set up variables and generate random samples
+
+  switch test_id
+    case {1,4}
+      dim_X = 1;
+      dim_Y = 1;
+      dim_W = 0;
+    case 2
+      dim_X = 1;
+      dim_Y = 1;
+      dim_W = 1;
+    case {3,5}
+      dim_X = 2;
+      dim_Y = 2;
+      dim_W = 0;
+  end
+
+  % Dimension of Z
+  D = dim_X + dim_Y + dim_W;
+
+  % Partitions
+  p_X = 1:dim_X;
+  p_Y = dim_X+1:dim_X+dim_Y;
+  p_W = dim_X+dim_Y+1:D;
+
+  % Seed the RNG
+  rng(seed);
+
+  % Generate random samples
+  Z = randn(D,T);
+
+  X = Z(p_X,:)';
+  Y = Z(p_Y,:)';
+  W = Z(p_W,:)';
+
+  %% Obtain measurements and p-values
+
+  % From our code..
+  [measure,pval,~,stats] = computeMeasure(X,Y,W);
+  pval2 = significance(measure,stats,'test','asymptotic');
+
+  % ...and JIDT
+  switch test_id
+    case {1,3}
+      calc.initialise(dim_X,dim_Y)
+      calc.setObservations(X,Y);
+    case 2
+      calc.initialise(dim_X,dim_Y,dim_W);
+      calc.setObservations(X,Y,W);
+    case {4,5}
+      calc.setProperty('k_HISTORY', num2str(stats.p));
+      calc.setProperty('l_HISTORY', num2str(stats.q));
+      calc.initialise(dim_Y,dim_X);
+      calc.setObservations(Y,X);
+  end
+
+  measure_JIDT = calc.computeAverageLocalOfObservations();
+  pval_JIDT = calc.computeSignificance.pValue;
+
+  % If testing Granger, multiple TE by 2
+  if test_id > 3
+    measure_JIDT = 2*measure_JIDT;
+  end
+
+  %% Print results
+
+  fprintf('---\n');
+  fprintf('Measure "%s" computed from JIDT: %.5g (p = %.5g)\n', which_test, measure_JIDT, pval_JIDT);
+  fprintf('Measure "%s" computed from this toolkit: %.5g (p = %.5g)\n', which_test, measure, pval);
 end
-
-% Choose the sample length and RNG (if wanted)
-T = 1000; % Number of samples
-seed = 'shuffle'; % RNG seed
-
-%% Set up the calculators
-javaaddpath('infodynamics.jar');  
-switch test_id
-  case {1,3}
-    calc = javaObject('infodynamics.measures.continuous.gaussian.MutualInfoCalculatorMultiVariateGaussian');
-  case 2
-    calc = javaObject('infodynamics.measures.continuous.gaussian.ConditionalMutualInfoCalculatorMultiVariateGaussian');
-  case {4,5}
-    calc = javaObject('infodynamics.measures.continuous.gaussian.TransferEntropyCalculatorMultiVariateGaussian');
-end
-
-if test_id < 4
-  computeMeasure = @(X,Y,W) mvmi(X,Y,W,'test','asymptotic');
-else
-  computeMeasure = @(X,Y,W) mvgc(X,Y,W,'p','auto','q','auto','test','asymptotic');
-end
-
-%% Set up variables and generate random samples
-
-switch test_id
-  case {1,4}
-    dim_X = 1;
-    dim_Y = 1;
-    dim_W = 0;
-  case 2
-    dim_X = 1;
-    dim_Y = 1;
-    dim_W = 1;
-  case {3,5}
-    dim_X = 2;
-    dim_Y = 2;
-    dim_W = 0;
-end
-
-% Dimension of Z
-D = dim_X + dim_Y + dim_W;
-
-% Partitions
-p_X = 1:dim_X;
-p_Y = dim_X+1:dim_X+dim_Y;
-p_W = dim_X+dim_Y+1:D;
-
-% Seed the RNG
-rng(seed);
-
-% Generate random samples
-Z = randn(D,T);
-
-X = Z(p_X,:)';
-Y = Z(p_Y,:)';
-W = Z(p_W,:)';
-
-%% Obtain measurements and p-values
-
-% From our code..
-[measure,pval,~,stats] = computeMeasure(X,Y,W);
-pval2 = significance(measure,stats,'test','asymptotic');
-
-% ...and JIDT
-switch test_id
-  case {1,3}
-    calc.initialise(dim_X,dim_Y)
-    calc.setObservations(X,Y);
-  case 2
-    calc.initialise(dim_X,dim_Y,dim_W);
-    calc.setObservations(X,Y,W);
-  case {4,5}
-    calc.setProperty('k_HISTORY', num2str(stats.p));
-    calc.setProperty('l_HISTORY', num2str(stats.q));
-    calc.initialise(dim_Y,dim_X);
-    calc.setObservations(Y,X);
-end
-  
-measure_JIDT = calc.computeAverageLocalOfObservations();
-pval_JIDT = calc.computeSignificance.pValue;
-
-% If testing Granger, multiple TE by 2
-if test_id > 3
-  measure_JIDT = 2*measure_JIDT;
-end
-
-%% Print results
-
-fprintf('Measure "%s" computed from JIDT: %.5g (p = %.5g)\n', which_test, measure_JIDT, pval_JIDT);
-fprintf('Measure "%s" computed from this toolkit: %.5g (p = %.5g)\n', which_test, measure, pval);

@@ -45,7 +45,7 @@ function [cmi,pval,dist,stats] = mvmi(X,Y,varargin)
 %     X = randn(100,3);
 %     Y = randn(100,5);
 %     [I,PVAL] = MVMI(X,Y)
-%     [I,PVAL] = MVMI(X,Y,'test','standard')
+%     [I,PVAL] = MVMI(X,Y,'test','finite')
 %
 %   See also <a href="matlab:help mvgc">mvgc</a>, <a href="matlab:help pcd">pc</a>
 

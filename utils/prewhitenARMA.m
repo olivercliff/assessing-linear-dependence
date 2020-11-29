@@ -1,9 +1,13 @@
-function [X_tilde,Y_tilde,W_tilde,orders] = prewhitenARMA(X,Y,W,p_max,q_max,fixed_order)
+function [X_tilde,Y_tilde,W_tilde,orders] = prewhitenARMA(X,Y,W,p_max,q_max,fixed_order,aic_or_bic)
 % Takes in two vectors, X and Y, (optionally a third, W) and outputs the
 % pre-whitened time series (based on the ARMA(p,q) model of X)
 
 if nargin < 6
   fixed_order = false;
+end
+
+if nargin < 7
+  aic_or_bic = 'aic';
 end
 
 % Get the model order
@@ -35,10 +39,13 @@ if ~fixed_order
   end
 
   nparams = (1:p_max+1)'*(1:q_max+1);
-  [~,bic] = aicbic(logL(:), nparams(:), length(X)*ones((p_max+1)*(q_max+1),1));
+  [aic,bic] = aicbic(logL(:), nparams(:), length(X)*ones((p_max+1)*(q_max+1),1));
 
-  % Use AIC
-  [~,opt_id] = min(bic);
+  if strcmp(aic_or_bic,'bic')
+    [~,opt_id] = min(bic);
+  else
+    [~,opt_id] = min(aic);
+  end
   [p_opt,q_opt] = ind2sub([1+p_max, 1+q_max],opt_id);
 
   est_mdl = mdl{p_opt,q_opt};

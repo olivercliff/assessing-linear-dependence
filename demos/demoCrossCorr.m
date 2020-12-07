@@ -8,9 +8,9 @@
 
 %% Configure
 
-addpath ..
+addpath(genpath('../'));
 
-causal = true; % Causal influence from Y to X
+causal = false; % Causal influence from Y to X
 lag = 10; % Which lag is this influence at?
 
 ar = true; % Are processes autoregressive?

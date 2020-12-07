@@ -248,7 +248,7 @@ for r = 1:config.R
     
     try
       tic;
-      [X_pw_ar1,Y_pw_ar1,W_pw_ar1] = prewhitenAR(X,Y,W,1);
+      [X_pw_ar1,Y_pw_ar1,W_pw_ar1] = prewhitenAR(X,Y,W,1,1,config.whiten_both);
       pw_timer(r,1) = toc;
       [~,pvals_F(r,1)] = computeMeasure(X_pw_ar1,Y_pw_ar1,W_pw_ar1,...
                                         'test','finite');
@@ -268,7 +268,7 @@ for r = 1:config.R
     
     try
       tic;
-      [X_pw_arp,Y_pw_arp,W_pw_arp,pw_ar_orders(r)] = prewhitenAR(X,Y,W);
+      [X_pw_arp,Y_pw_arp,W_pw_arp,pw_ar_orders(r)] = prewhitenAR(X,Y,W,[],[],config.whiten_both);
       pw_timer(r,3) = toc;
       [~,pvals_F(r,3)] = computeMeasure(X_pw_arp,Y_pw_arp,W_pw_arp,...
                                         'test','finite');

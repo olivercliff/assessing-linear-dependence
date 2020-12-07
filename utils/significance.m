@@ -81,7 +81,7 @@ if (~stats.cmi && ~strcmp(parser.Results.test,'modified')) || strcmp(parser.Resu
     t = estimate.*sqrt((stats.N_o-2)./(1-estimate.^2));
 
     % Get p-value from quantile function of F-dist
-    pval = fcdf(t^2,1,stats.N_o-2);
+    pval = 1-fcdf(t^2,1,stats.N_o-2);
     
     if nargout > 1
       dist = tinv(linspace(0,1,S),stats.N_o-2)./sqrt(stats.N_o-2);
@@ -173,7 +173,6 @@ elseif strcmp(parser.Results.test,'modified')
       dist = sort(dist);
     end
   else
-    
     % Sum the partial correlations
     r = estimate;
     nu = stats.d_2;
@@ -182,7 +181,7 @@ elseif strcmp(parser.Results.test,'modified')
     t = r.*sqrt((nu)./(1-r.^2));
     
     % ...and get p-value analytically
-    pval = fcdf(t^2,1,nu);
+    pval = 1-fcdf(t^2,1,nu);
     
     if nargout > 1
       dist = tinv(linspace(0,1,S),stats.d_2)./sqrt(stats.d_2);

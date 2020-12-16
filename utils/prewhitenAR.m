@@ -1,32 +1,37 @@
-function [X_tilde,Y_tilde,W_tilde,pX,pY] = prewhitenAR(X,Y,W,pX,pY,pw_both)
+function [X_tilde,Y_tilde,ar_order] = prewhitenAR(X,Y,ar_order,use_aic)
 % Takes in two vectors, X and Y, (optionally a third, W) and outputs the
 % pre-whitened time series (based on the AR(p) model of X)
 
 % Get the model order
-if pw_both
-  if nargin < 4 || isempty(pX)
-    pX = order(X);
-    pY = order(Y);
+if nargin < 3 || isempty(ar_order)
+  
+  if ~use_aic
+    % Uses Burg's method/partial autocorrelation and chooses first value <
+    % 1.96/sqrt(T-1)
+    ar_order = order(X);
+  else
+    max_order = length(X)-1;
+
+    Mdls = cell(max_order,1);
+    aics = inf(max_order,1);
+    for p = 1:max_order
+      try
+        Mdls{p} = ar(iddata(X),p,'approach','burg');
+        aics(p) = aic(Mdls{p});
+      catch
+        break;
+      end
+    end
+    [~,minaic] = min(aics);
+    ar_order = minaic;
+    Mdl = Mdls{ar_order};
   end
-  MdlX = ar(iddata(X),pX,'approach','burg');
-  MdlY = ar(iddata(Y),pY,'approach','burg');
-else
-  if nargin < 4 || isempty(pX)
-    pX = order(X);
-  end
-  MdlX = ar(iddata(X),pX,'approach','burg');
-  MdlY = MdlX;
+end
+
+if ~exist('Mdl','var')
+  Mdl = ar(iddata(X),ar_order,'approach','burg');
 end
 
 % Take residuals
-X_tilde = X-predict(MdlX,iddata(X),1).OutputData;
-Y_tilde = Y-predict(MdlY,iddata(Y),1).OutputData;
-
-if nargin > 2 || isempty(W)
-  W_tilde = zeros(size(X_tilde,1),size(W,2));
-  for i = 1:size(W,2)
-    W_tilde(:,i) = infer(MdlX,W(:,i));
-  end
-else
-  W_tilde = [];
-end
+X_tilde = resid(iddata(X),Mdl).OutputData;
+Y_tilde = resid(iddata(Y),Mdl).OutputData;

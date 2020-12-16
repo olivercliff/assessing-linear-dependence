@@ -1,6 +1,6 @@
 % Choose settings from the paper (or '' for your own custom configuration)
-myfig = '';
-exp = 1;
+myfig = '10b';
+exp = 5;
 
 addpath ../utils/
 
@@ -12,7 +12,7 @@ if isempty(myfig)
   config.dim_Y = 1; % set Y dimension
   config.dim_W = 0; % set W dimension
 
-  config.to_filter = 1; % None=0, MA/FIR=1, ARMA/IIR=2
+  config.to_filter = 1; % None=0, FIR/MA=1, IIR/ARMA=2
   config.filter_order = 24; % FIR/IIR Filter order
   config.ar = true; % Include the AR parameters (or use IID, false)
   config.lm = false;
@@ -24,7 +24,7 @@ if isempty(myfig)
   config.p = 'auto'; % Optimal embedding, set to numeric for a specific embedding
   config.q = 'auto';
   
-  config.whiten = true;
+  config.whiten = false;
   config.whiten_both = true;
   config.arma_p_max = 0;
   config.arma_q_max = 0;

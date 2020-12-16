@@ -14,10 +14,13 @@ function config = getConfiguration(fig,subfig,exp)
   config.S = 1000; % Number of samples for MC distribution
   config.alpha = 0.05; % significance level
   
+  config.lm = false; % Include the AR parameters (or use IID, false)
   config.ar = true; % Include the AR parameters (or use IID, false)
   config.causal = false; % Non-causal (null model, should we be testing true negatives or false positives?)
   
   config.seed = 'shuffle'; % RNG seed (we didn't use one for the numerical sims)
+  
+  config.use_arma = false;
   
   filter_orders = 0:4:32;
   dims = 1:5;
@@ -178,6 +181,8 @@ function config = getConfiguration(fig,subfig,exp)
       config.dim_W = 0; % set W dimension
       
       config.whiten = true;
+      config.whiten_both = false;
+      
       config.arma_p_max = 5;
       config.arma_q_max = 5;
       
@@ -197,8 +202,10 @@ function config = getConfiguration(fig,subfig,exp)
       config.dim_W = 0;
       
       config.whiten = true;
-      config.arma_p_max = 5;
-      config.arma_q_max = 5;
+      config.whiten_both = false;
+      
+      config.arma_p_max = 1;
+      config.arma_q_max = 1;
       
       if isempty(exp)
         config.filter_order = 8;

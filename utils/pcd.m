@@ -80,3 +80,14 @@ for j = 1:k
     cs(ij) = size(C_ij,2)-1;
   end
 end
+
+if parser.Results.verifyStationary
+  acf = autocorr(resids(:,end,1),T-1);
+  if mean(acf(2:end) > 1.96/sqrt(T)) > 0.05
+    warning('Residuals for X process are non-stationary');
+  end
+  acf = autocorr(resids(:,end,2),T-1);
+  if mean(acf(2:end) > 1.96/sqrt(T)) > 0.05
+    warning('Residuals for Y process are non-stationary');
+  end
+end

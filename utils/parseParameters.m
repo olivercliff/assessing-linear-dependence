@@ -13,6 +13,9 @@ addParameter(parser,'taperMethod','none',...
               
 addParameter(parser,'multivariateBartlett',false,...
                 @(x) (islogical(x) && isscalar(x)));
+              
+addParameter(parser,'verifyStationary',false,...
+                @(x) (islogical(x) && isscalar(x)));
             
 addParameter(parser,'p','auto',@ischar);
 addParameter(parser,'q','auto',@ischar);

@@ -92,7 +92,7 @@ if config.is_pc
   computeMeasure = @(X,Y,W,varargin) pcorr(X,Y,W,varargin{:});
 else
   if config.is_granger
-    computeMeasure = @(X,Y,W,varargin) mvgc(X,Y,W,'p',config.p,'q',config.q,varargin{:});
+    computeMeasure = @(X,Y,W,varargin) mvgc(X,Y,W,'p',config.p,'q',config.q,varargin{:},'verifyStationary',true);
   else
     computeMeasure = @(X,Y,W,varargin) mvmi(X,Y,W,varargin{:});
   end
@@ -231,6 +231,14 @@ for r = 1:config.R
     end
   end
   
+  if config.use_arma
+    if ~exist('Mdl','var')
+      Mdl = estimate(arima(5,0,5),X,'display','off');
+    end
+    X = simulate(Mdl,config.T);
+    Y = simulate(Mdl,config.T);
+  end
+  
   % Normalise the data (N.B. a column is a single time series)
   X = zscore(detrend(X));
   Y = zscore(detrend(Y));
@@ -248,43 +256,41 @@ for r = 1:config.R
     
     try
       tic;
-      [X_pw_ar1,Y_pw_ar1,W_pw_ar1] = prewhitenAR(X,Y,W,1,1,config.whiten_both);
+      [X_pw_ar1,Y_pw_ar1] = prewhitenAR(X,Y,1,false);
       pw_timer(r,1) = toc;
-      [~,pvals_F(r,1)] = computeMeasure(X_pw_ar1,Y_pw_ar1,W_pw_ar1,...
-                                        'test','finite');
+      [~,pvals_F(r,1)] = computeMeasure(X_pw_ar1,Y_pw_ar1,'test','finite');
     catch
       warning('Run %i failed to learn AR(1) model\n',r);
     end
     
-    try
-      tic;
-      [X_pw_arma11,Y_pw_arma11,W_pw_arma11] = prewhitenARMA(X,Y,W,1,1,true);
-      pw_timer(r,2) = toc;
-      [~,pvals_F(r,2)] = computeMeasure(X_pw_arma11,Y_pw_arma11,W_pw_arma11,...
-                                        'test','finite');
-    catch
-      warning('Run %i failed to learn ARMA(1,1) model\n',r);
-    end
+%     try
+%       tic;
+%       [X_pw_arma11,Y_pw_arma11,W_pw_arma11] = prewhitenARMA(X,Y,W,1,1,true);
+%       pw_timer(r,2) = toc;
+%       [~,pvals_F(r,2)] = computeMeasure(X_pw_arma11,Y_pw_arma11,W_pw_arma11,...
+%                                         'test','finite');
+%     catch
+%       warning('Run %i failed to learn ARMA(1,1) model\n',r);
+%     end
     
     try
       tic;
-      [X_pw_arp,Y_pw_arp,W_pw_arp,pw_ar_orders(r)] = prewhitenAR(X,Y,W,[],[],config.whiten_both);
+      [X_pw_arp,Y_pw_arp,pw_ar_orders(r)] = prewhitenAR(X,Y,[],true);
       pw_timer(r,3) = toc;
-      [~,pvals_F(r,3)] = computeMeasure(X_pw_arp,Y_pw_arp,W_pw_arp,...
-                                        'test','finite');
+      [~,pvals_F(r,3)] = computeMeasure(X_pw_arp,Y_pw_arp,'test','finite');
     catch
       warning('Run %i failed to learn AR(p) model\n',r);
     end
     
-    try
-      tic;
-      [X_pw_armapq,Y_pw_armapq,W_pw_armapq,pw_arma_orders(r,:)] = prewhitenARMA(X,Y,W,config.arma_p_max,config.arma_q_max,false);
-      pw_timer(r,4) = toc;
-      [~,pvals_F(r,4)] = computeMeasure(X_pw_armapq,Y_pw_armapq,W_pw_armapq,...
-                                        'test','finite');
-    catch
-      warning('Run %i failed to learn ARMA(p,q) model\n',r);
-    end
+%     try
+%       tic;
+%       [X_pw_armapq,Y_pw_armapq,W_pw_armapq,pw_arma_orders(r,:)] = prewhitenARMA(X,Y,W,config.arma_p_max,config.arma_q_max,false);
+%       pw_timer(r,4) = toc;
+%       [~,pvals_F(r,4)] = computeMeasure(X_pw_armapq,Y_pw_armapq,W_pw_armapq,...
+%                                         'test','finite');
+%     catch
+%       warning('Run %i failed to learn ARMA(p,q) model\n',r);
+%     end
   else
     pvals_chi2(r) = significance(measure,stats,'test','asymptotic');
     
@@ -301,8 +307,8 @@ for r = 1:config.R
       if config.whiten
         fprintf('\tF-test (AR(1) whitened): %.3g\n', mean(pvals_F(1:r,1) <= 0.05 ));
         fprintf('\tF-test (ARMA(1,1) whitened): %.3g\n', mean(pvals_F(1:r,2) <= 0.05 ));
-        fprintf('\tF-test (AR(p) whitened): %.3g\n', mean(pvals_F(1:r,3) <= 0.05 ));
-        fprintf('\tF-test (ARMA(p,q) whitened): %.3g\n', mean(pvals_F(1:r,4) <= 0.05 ));
+        fprintf('\tF-test (AR(p) whitened with p ~ %i): %.3g\n', round(mean(pw_ar_orders(1:r))), mean(pvals_F(1:r,3) <= 0.05 ));
+        fprintf('\tF-test (ARMA(p,q) whitened with p ~ %i and q ~ %i): %.3g\n', round(mean(pw_arma_orders(1:r,1))), round(mean(pw_arma_orders(1:r,2))),mean(pvals_F(1:r,4) <= 0.05 ));
       else
         fprintf('\tChi^2-test: %.3g\n', mean(pvals_chi2(1:r) <= 0.05 ));
         if univariate

@@ -159,7 +159,7 @@ fprintf('Using the following tests:\n');
 fprintf('\t1. The modified F-test (ours)\n');
 if config.whiten
   pvals_E = nan(config.R,1); % exact test (no prewhitening)
-  pvals_F = nan(config.R,4); % 4 different approaches to prewhitening
+  pvals_F = nan(config.R,5); % 5 different approaches to prewhitening
   pw_ar_orders_aic = nan(config.R,1);
   pw_ar_orders_bic = nan(config.R,1);
   pw_arma_orders = nan(config.R,2);
@@ -264,15 +264,15 @@ for r = 1:config.R
       warning('Run %i failed to learn AR(1) model\n',r);
     end
     
-%     try
-%       tic;
-%       [X_pw_arma11,Y_pw_arma11,W_pw_arma11] = prewhitenARMA(X,Y,W,1,1,true);
-%       pw_timer(r,2) = toc;
-%       [~,pvals_F(r,2)] = computeMeasure(X_pw_arma11,Y_pw_arma11,W_pw_arma11,...
-%                                         'test','finite');
-%     catch
-%       warning('Run %i failed to learn ARMA(1,1) model\n',r);
-%     end
+    try
+      tic;
+      [X_pw_arma11,Y_pw_arma11,W_pw_arma11] = prewhitenARMA(X,Y,W,1,1,true);
+      pw_timer(r,2) = toc;
+      [~,pvals_F(r,2)] = computeMeasure(X_pw_arma11,Y_pw_arma11,W_pw_arma11,...
+                                        'test','finite');
+    catch
+      warning('Run %i failed to learn ARMA(1,1) model\n',r);
+    end
 
     try
       tic;
@@ -287,7 +287,7 @@ for r = 1:config.R
       tic;
       [X_pw_arp_bic,Y_pw_arp_bic,pw_ar_orders_bic(r)] = prewhitenAR(X,Y,[],'BIC');
       pw_timer(r,3) = toc;
-      [~,pvals_F(r,3)] = computeMeasure(X_pw_arp_bic,Y_pw_arp_bic,'test','finite');
+      [~,pvals_F(r,4)] = computeMeasure(X_pw_arp_bic,Y_pw_arp_bic,'test','finite');
     catch
       warning('Run %i failed to learn AR(p) model\n',r);
     end
@@ -296,7 +296,7 @@ for r = 1:config.R
 %       tic;
 %       [X_pw_armapq,Y_pw_armapq,W_pw_armapq,pw_arma_orders(r,:)] = prewhitenARMA(X,Y,W,[],[]);
 %       pw_timer(r,4) = toc;
-%       [~,pvals_F(r,4)] = computeMeasure(X_pw_armapq,Y_pw_armapq,W_pw_armapq,...
+%       [~,pvals_F(r,5)] = computeMeasure(X_pw_armapq,Y_pw_armapq,W_pw_armapq,...
 %                                         'test','finite');
 %     catch
 %       warning('Run %i failed to learn ARMA(p,q) model\n',r);
@@ -318,8 +318,8 @@ for r = 1:config.R
         fprintf('\tF-test (AR(1) whitened): %.3g\n', mean(pvals_F(1:r,1) <= 0.05 ));
         fprintf('\tF-test (ARMA(1,1) whitened): %.3g\n', mean(pvals_F(1:r,2) <= 0.05 ));
         fprintf('\tF-test (AR(p) with AIC whitened with p ~ %i): %.3g\n', round(mean(pw_ar_orders_aic(1:r))), mean(pvals_F(1:r,3) <= 0.05 ));
-        fprintf('\tF-test (AR(p) with BIC whitened with p ~ %i): %.3g\n', round(mean(pw_ar_orders_bic(1:r))), mean(pvals_F(1:r,3) <= 0.05 ));
-        fprintf('\tF-test (ARMA(p,q) whitened with p ~ %i and q ~ %i): %.3g\n', round(mean(pw_arma_orders(1:r,1))), round(mean(pw_arma_orders(1:r,2))),mean(pvals_F(1:r,4) <= 0.05 ));
+        fprintf('\tF-test (AR(p) with BIC whitened with p ~ %i): %.3g\n', round(mean(pw_ar_orders_ic(1:r))), mean(pvals_F(1:r,4) <= 0.05 ));
+        fprintf('\tF-test (ARMA(p,q) whitened with p ~ %i and q ~ %i): %.3g\n', round(mean(pw_arma_orders(1:r,1))), round(mean(pw_arma_orders(1:r,2))),mean(pvals_F(1:r,5) <= 0.05 ));
       else
         fprintf('\tChi^2-test: %.3g\n', mean(pvals_chi2(1:r) <= 0.05 ));
         if univariate

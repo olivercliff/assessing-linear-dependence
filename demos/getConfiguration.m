@@ -183,9 +183,6 @@ function config = getConfiguration(fig,subfig,exp)
       config.whiten = true;
       config.whiten_both = false;
       
-      config.arma_p_max = 5;
-      config.arma_q_max = 5;
-      
       if isempty(exp)
         config.filter_order = 8;
       else
@@ -203,9 +200,6 @@ function config = getConfiguration(fig,subfig,exp)
       
       config.whiten = true;
       config.whiten_both = false;
-      
-      config.arma_p_max = 1;
-      config.arma_q_max = 1;
       
       if isempty(exp)
         config.filter_order = 8;

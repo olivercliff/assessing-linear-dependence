@@ -160,7 +160,8 @@ fprintf('\t1. The modified F-test (ours)\n');
 if config.whiten
   pvals_E = nan(config.R,1); % exact test (no prewhitening)
   pvals_F = nan(config.R,4); % 4 different approaches to prewhitening
-  pw_ar_orders = nan(config.R,1);
+  pw_ar_orders_aic = nan(config.R,1);
+  pw_ar_orders_bic = nan(config.R,1);
   pw_arma_orders = nan(config.R,2);
   pw_timer = nan(config.R,4);
   fprintf('\t2. The F-test after prewhitening\n');
@@ -256,7 +257,7 @@ for r = 1:config.R
     
     try
       tic;
-      [X_pw_ar1,Y_pw_ar1] = prewhitenAR(X,Y,1,false);
+      [X_pw_ar1,Y_pw_ar1] = prewhitenAR(X,Y,1);
       pw_timer(r,1) = toc;
       [~,pvals_F(r,1)] = computeMeasure(X_pw_ar1,Y_pw_ar1,'test','finite');
     catch
@@ -272,19 +273,28 @@ for r = 1:config.R
 %     catch
 %       warning('Run %i failed to learn ARMA(1,1) model\n',r);
 %     end
-    
+
     try
       tic;
-      [X_pw_arp,Y_pw_arp,pw_ar_orders(r)] = prewhitenAR(X,Y,[],true);
+      [X_pw_arp_aic,Y_pw_arp_aic,pw_ar_orders_aic(r)] = prewhitenAR(X,Y,[],'AICc');
       pw_timer(r,3) = toc;
-      [~,pvals_F(r,3)] = computeMeasure(X_pw_arp,Y_pw_arp,'test','finite');
+      [~,pvals_F(r,3)] = computeMeasure(X_pw_arp_aic,Y_pw_arp_aic,'test','finite');
     catch
       warning('Run %i failed to learn AR(p) model\n',r);
     end
     
+    try
+      tic;
+      [X_pw_arp_bic,Y_pw_arp_bic,pw_ar_orders_bic(r)] = prewhitenAR(X,Y,[],'BIC');
+      pw_timer(r,3) = toc;
+      [~,pvals_F(r,3)] = computeMeasure(X_pw_arp_bic,Y_pw_arp_bic,'test','finite');
+    catch
+      warning('Run %i failed to learn AR(p) model\n',r);
+    end
+%     
 %     try
 %       tic;
-%       [X_pw_armapq,Y_pw_armapq,W_pw_armapq,pw_arma_orders(r,:)] = prewhitenARMA(X,Y,W,config.arma_p_max,config.arma_q_max,false);
+%       [X_pw_armapq,Y_pw_armapq,W_pw_armapq,pw_arma_orders(r,:)] = prewhitenARMA(X,Y,W,[],[]);
 %       pw_timer(r,4) = toc;
 %       [~,pvals_F(r,4)] = computeMeasure(X_pw_armapq,Y_pw_armapq,W_pw_armapq,...
 %                                         'test','finite');
@@ -321,7 +331,7 @@ end
 
 if ~isempty(output_file)
   if config.whiten
-    save(output_file,'config','pvals_E','pvals_F','pw_ar_orders','pw_arma_orders','eta_mean');
+    save(output_file,'config','pvals_E','pvals_F','pw_ar_orders_aic','pw_ar_orders_bic','pw_arma_orders','eta_mean');
   else
     if univariate
       save(output_file,'config','pvals_E','pvals_chi2','pvals_F','eta_mean');

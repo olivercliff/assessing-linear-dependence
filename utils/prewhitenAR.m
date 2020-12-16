@@ -1,35 +1,42 @@
-function [X_tilde,Y_tilde,ar_order] = prewhitenAR(X,Y,ar_order,use_aic)
+function [X_tilde,Y_tilde,ar_order] = prewhitenAR(X,Y,ar_order,method)
 % Takes in two vectors, X and Y, (optionally a third, W) and outputs the
 % pre-whitened time series (based on the AR(p) model of X)
 
 % Get the model order
+if nargin < 4
+  method = 'AICc';
+end
+
 if nargin < 3 || isempty(ar_order)
   
-  if ~use_aic
+  if strcmp(method,'Burgs')
     % Uses Burg's method/partial autocorrelation and chooses first value <
     % 1.96/sqrt(T-1)
     ar_order = order(X);
-  else
-    max_order = length(X)-1;
+  elseif strcmp(method,'AICc') || strcmp(method,'BIC')
+    
+    max_order = round(length(X)/2);
 
     Mdls = cell(max_order,1);
     aics = inf(max_order,1);
+    XI = iddata(X);
     for p = 1:max_order
       try
-        Mdls{p} = ar(iddata(X),p,'approach','burg');
-        aics(p) = aic(Mdls{p});
+        Mdls{p} = ar(XI,p);
+        aics(p) = aic(Mdls{p},method);
       catch
         break;
       end
     end
-    [~,minaic] = min(aics);
-    ar_order = minaic;
+    [~,ar_order] = min(aics);
     Mdl = Mdls{ar_order};
+  else
+    error('Unknown method: %s',method);
   end
 end
 
 if ~exist('Mdl','var')
-  Mdl = ar(iddata(X),ar_order,'approach','burg');
+  Mdl = ar(iddata(X),ar_order);
 end
 
 % Take residuals

@@ -266,9 +266,9 @@ for r = 1:config.R
     
     try
       tic;
-      [X_pw_arma11,Y_pw_arma11,W_pw_arma11] = prewhitenARMA(X,Y,W,1,1,true);
+      [X_pw_arma11,Y_pw_arma11] = prewhitenARMA(X,Y,1,1);
       pw_timer(r,2) = toc;
-      [~,pvals_F(r,2)] = computeMeasure(X_pw_arma11,Y_pw_arma11,W_pw_arma11,...
+      [~,pvals_F(r,2)] = computeMeasure(X_pw_arma11,Y_pw_arma11,...
                                         'test','finite');
     catch
       warning('Run %i failed to learn ARMA(1,1) model\n',r);
@@ -294,9 +294,9 @@ for r = 1:config.R
 %     
 %     try
 %       tic;
-%       [X_pw_armapq,Y_pw_armapq,W_pw_armapq,pw_arma_orders(r,:)] = prewhitenARMA(X,Y,W,[],[]);
+%       [X_pw_armapq,Y_pw_armapq,pw_arma_orders(r,:)] = prewhitenARMA(X,Y,[],[]);
 %       pw_timer(r,4) = toc;
-%       [~,pvals_F(r,5)] = computeMeasure(X_pw_armapq,Y_pw_armapq,W_pw_armapq,...
+%       [~,pvals_F(r,5)] = computeMeasure(X_pw_armapq,Y_pw_armapq,...
 %                                         'test','finite');
 %     catch
 %       warning('Run %i failed to learn ARMA(p,q) model\n',r);

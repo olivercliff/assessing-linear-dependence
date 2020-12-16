@@ -1,4 +1,4 @@
-function [X_tilde,Y_tilde,W_tilde,arma_orders] = prewhitenARMA(X,Y,W,ar_order,ma_order,aic_or_bic)
+function [X_tilde,Y_tilde,arma_orders] = prewhitenARMA(X,Y,ar_order,ma_order,aic_or_bic)
 % Takes in two vectors, X and Y, (optionally a third, W) and outputs the
 % pre-whitened time series (based on the ARMA(p,q) model of X)
 
@@ -55,12 +55,3 @@ end
 
 X_tilde = infer(Mdl,X);
 Y_tilde = infer(Mdl,Y);
-
-if nargin > 2 || isempty(W)
-  W_tilde = zeros(size(X_tilde,1),size(W,2));
-  for i = 1:size(W,2)
-    W_tilde(:,i) = infer(Mdl,W(:,i));
-  end
-else
-  W_tilde = [];
-end

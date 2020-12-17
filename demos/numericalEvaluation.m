@@ -318,7 +318,7 @@ for r = 1:config.R
         fprintf('\tF-test (AR(1) whitened): %.3g\n', mean(pvals_F(1:r,1) <= 0.05 ));
         fprintf('\tF-test (ARMA(1,1) whitened): %.3g\n', mean(pvals_F(1:r,2) <= 0.05 ));
         fprintf('\tF-test (AR(p) with AIC whitened with p ~ %i): %.3g\n', round(mean(pw_ar_orders_aic(1:r))), mean(pvals_F(1:r,3) <= 0.05 ));
-        fprintf('\tF-test (AR(p) with BIC whitened with p ~ %i): %.3g\n', round(mean(pw_ar_orders_ic(1:r))), mean(pvals_F(1:r,4) <= 0.05 ));
+        fprintf('\tF-test (AR(p) with BIC whitened with p ~ %i): %.3g\n', round(mean(pw_ar_orders_bic(1:r))), mean(pvals_F(1:r,4) <= 0.05 ));
         fprintf('\tF-test (ARMA(p,q) whitened with p ~ %i and q ~ %i): %.3g\n', round(mean(pw_arma_orders(1:r,1))), round(mean(pw_arma_orders(1:r,2))),mean(pvals_F(1:r,5) <= 0.05 ));
       else
         fprintf('\tChi^2-test: %.3g\n', mean(pvals_chi2(1:r) <= 0.05 ));

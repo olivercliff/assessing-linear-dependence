@@ -92,7 +92,7 @@ if config.is_pc
   computeMeasure = @(X,Y,W,varargin) pcorr(X,Y,W,varargin{:});
 else
   if config.is_granger
-    computeMeasure = @(X,Y,W,varargin) mvgc(X,Y,W,'p',config.p,'q',config.q,varargin{:},'verifyStationary',true);
+    computeMeasure = @(X,Y,W,varargin) mvgc(X,Y,W,'p',config.p,'q',config.q,varargin{:});
   else
     computeMeasure = @(X,Y,W,varargin) mvmi(X,Y,W,varargin{:});
   end
@@ -259,19 +259,19 @@ for r = 1:config.R
       tic;
       [X_pw_ar1,Y_pw_ar1] = prewhitenAR(X,Y,1);
       pw_timer(r,1) = toc;
-      [~,pvals_F(r,1)] = computeMeasure(X_pw_ar1,Y_pw_ar1,'test','finite');
-    catch
-      warning('Run %i failed to learn AR(1) model\n',r);
+      [~,pvals_F(r,1)] = computeMeasure(X_pw_ar1,Y_pw_ar1,[],'test','finite');
+    catch err
+      warning('Run %i failed to learn AR(1) model: %s\n',r, err.message);
     end
     
     try
       tic;
       [X_pw_arma11,Y_pw_arma11] = prewhitenARMA(X,Y,1,1);
       pw_timer(r,2) = toc;
-      [~,pvals_F(r,2)] = computeMeasure(X_pw_arma11,Y_pw_arma11,...
+      [~,pvals_F(r,2)] = computeMeasure(X_pw_arma11,Y_pw_arma11,[],...
                                         'test','finite');
-    catch
-      warning('Run %i failed to learn ARMA(1,1) model\n',r);
+    catch err
+      warning('Run %i failed to learn ARMA(1,1) model: %s\n',r,err.message);
     end
 
     try
@@ -279,17 +279,17 @@ for r = 1:config.R
       [X_pw_arp_aic,Y_pw_arp_aic,pw_ar_orders_aic(r)] = prewhitenAR(X,Y,[],'AICc');
       pw_timer(r,3) = toc;
       [~,pvals_F(r,3)] = computeMeasure(X_pw_arp_aic,Y_pw_arp_aic,'test','finite');
-    catch
-      warning('Run %i failed to learn AR(p) model\n',r);
+    catch err
+      warning('Run %i failed to learn AR(p) model: %s\n',r, err.message);
     end
     
     try
       tic;
       [X_pw_arp_bic,Y_pw_arp_bic,pw_ar_orders_bic(r)] = prewhitenAR(X,Y,[],'BIC');
       pw_timer(r,3) = toc;
-      [~,pvals_F(r,4)] = computeMeasure(X_pw_arp_bic,Y_pw_arp_bic,'test','finite');
-    catch
-      warning('Run %i failed to learn AR(p) model\n',r);
+      [~,pvals_F(r,4)] = computeMeasure(X_pw_arp_bic,Y_pw_arp_bic,[],'test','finite');
+    catch err
+      warning('Run %i failed to learn AR(p) model: %s\n',r, err.message);
     end
 %     
 %     try

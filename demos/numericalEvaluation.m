@@ -278,7 +278,7 @@ for r = 1:config.R
       tic;
       [X_pw_arp_aic,Y_pw_arp_aic,pw_ar_orders_aic(r)] = prewhitenAR(X,Y,[],'AICc');
       pw_timer(r,3) = toc;
-      [~,pvals_F(r,3)] = computeMeasure(X_pw_arp_aic,Y_pw_arp_aic,'test','finite');
+      [~,pvals_F(r,3)] = computeMeasure(X_pw_arp_aic,Y_pw_arp_aic,[],'test','finite');
     catch err
       warning('Run %i failed to learn AR(p) model: %s\n',r, err.message);
     end

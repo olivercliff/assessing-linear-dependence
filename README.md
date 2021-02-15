@@ -18,7 +18,7 @@ The code is licensed under the [GNU GPL v3 license](http://www.gnu.org/licenses/
 # Citation
 Please **cite** your use of this code as:
 
-Oliver M. Cliff, Leonardo Novelli, Ben D Fulcher, James M. Shine, Joseph T. Lizier, "Exact Inference of Linear Dependence for Multiple Autocorrelated Time Series," arXiv preprint arXiv:2003.03887 (2020).
+Oliver M. Cliff, Leonardo Novelli, Ben D Fulcher, James M. Shine, Joseph T. Lizier, "Assessing the significance of directed and multivariate measures of linear dependence between time series," Phys. Rev. Research 3, 013145 (2021).
 
 # Acknowledgements
 This project was in part supported through:

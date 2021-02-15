@@ -1,7 +1,7 @@
 # Assessing the significance of directed and multivariate dependence measures
 Copyright (C) 2020 Oliver Cliff.
 
-This repository provides MATLAB functions for computing and assessing the linear dependence between multiple autocorrelated time series. This includes various linear dependence measures and the hypothesis tests for inferring their significance, all discussed in our paper in [https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.3.013145](Phys. Rev. Research) and [https://arxiv.org/abs/2003.03887](arXiv).
+This repository provides MATLAB functions for computing and assessing the linear dependence between multiple autocorrelated time series. This includes various linear dependence measures and the hypothesis tests for inferring their significance, all discussed in our paper in [Phys. Rev. Research](https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.3.013145) and [arXiv](https://arxiv.org/abs/2003.03887).
 
 The measures implemented are: **mutual information**, **conditional mutual information**, **Granger causality**, and **conditional Granger causality** (each for *univariate* and *multivariate* linear-Gaussian processes). For completeness we have also included **Pearson correlation** and **partial correlation** for *univariate* processes (with a potentially *multivariate* conditional process).
 

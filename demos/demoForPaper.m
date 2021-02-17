@@ -1,8 +1,11 @@
 % Choose settings from the paper (or '' for your own custom configuration)
-myfig = '11a';
+myfig = '1a';
+
+% This is which experiment (data-point) within the plot/subfigure.
+% It increases the autocorrelation or other properties (see paper)
 exp = 1;
 
-addpath ../utils/
+addpath(genpath('../'));
 
 if isempty(myfig)
   config.T = 2^9; % Dataset length

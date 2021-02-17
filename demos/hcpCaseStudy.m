@@ -6,8 +6,7 @@
 % If you use this code for your research, please cite the following paper:
 %
 % Oliver M. Cliff, Leonardo Novelli, Ben D Fulcher, James M. Shine,
-% Joseph T. Lizier, "Exact Inference of Linear Dependence for Multiple
-% Autocorrelated Time Series," arXiv preprint arXiv:2003.03887 (2020).
+% Joseph T. Lizier, "Assessing the significance of directed and multivariate measures of linear dependence between time series," Phys. Rev. Research 3, 013145 (2021)..
 %
 % This function is free software: you can redistribute it and/or modify it under
 % the terms of the GNU General Public License as published by the Free Software
@@ -26,20 +25,12 @@
 clear
 close all
 
-if ~exist('granger_causality.m','file')
-  addpath('..');
-  addpath('../utils/');
-end
+addpath(genpath('..'));
 
-rest = false;
 prewhiten = false;
 
 % Download the HCP data (if it's not already there)
-if rest
-  datafile = './data/hcp_rsfMRI.mat';
-else
-  datafile = './data/hcp_tfMRI.mat';
-end
+datafile = './data/hcp_rsfMRI.mat';
 
 if ~exist(datafile,'file')
   article_url = '<a href = "https://figshare.com/articles/hcp_rsfMRI_mat/12084636">https://figshare.com/articles/hcp_rsfMRI_mat/12084636</a>';
@@ -94,7 +85,7 @@ end
 % - 3: GC, optimal embedding
 % - 4: GC, high embedding
 % - 5: GC with MV dim 2 (not in paper)
-which_test = 3;
+which_test = 1;
 
 % Do you want to use the F-test or the asymptotic LR (chi^2) test 
 f_test = false;
@@ -142,16 +133,9 @@ generate_tikz = false;
 R = 1000; % Number of trials
 surrogates = 5000; % MC sample size
 alpha = 0.05; % Significance level
-if rest
-  seq = 201:1000; % Sequence of the data to take (cut off first+last 200)
-else
-  seq = 50:380; % Sequence of the data to take (cut off first+last 200)
-end
+seq = 201:1000; % Sequence of the data to take (cut off first+last 200)
 
 to_filter = 2; % Filter the BOLD data? (1 = FIR, 2 = IIR)
-
-% Bias towards only selecting the highest ACF in the subject (increases the FPR slightly)
-only_high_ac_regions = false;
 
 verbose = true;
 
@@ -231,14 +215,14 @@ for r = 1:R
   
   % Compute our measures
   if is_granger
-    [measure(r),pvals_E(r)] = mvgc(X,Y,W,'p',config.p,'q',config.q,'test','lambda','surrogates',surrogates);
+    [measure(r),pvals_E(r)] = mvgc(X,Y,W,'p',config.p,'q',config.q,'test','modified','surrogates',surrogates);
     [~,pvals_LR(r)] = mvgc(X,Y,W,'p',config.p,'q',config.q,'test','asymptotic');
     
     if prewhiten && dims == 1
       [measure_pw(r),pvals_LR_pw(r)] = mvgc(X_pw,Y_pw,W_pw,'p',config.p,'q',config.q,'test','asymptotic');
     end
   else
-    [measure(r),pvals_E(r)] = mvmi(X,Y,W,'test','lambda','surrogates',surrogates);
+    [measure(r),pvals_E(r)] = mvmi(X,Y,W,'test','modified','surrogates',surrogates);
     [measure(r),pvals_LR(r)] = mvmi(X,Y,W,'test','asymptotic');
     
     if prewhiten && dims == 1
@@ -262,7 +246,9 @@ hold on;
 plot([0 1], [0 1], 'k:');
 ph1 = plot(sort(pvals_LR),linspace(0,1,R), '-', 'color', col_LR, 'linewidth', 1);
 ph2 = plot(sort(pvals_E),linspace(0,1,R), '-', 'color', col_E, 'linewidth', 1);
-ph3 = plot(sort(pvals_LR_pw),linspace(0,1,R), '--', 'color', col_LR, 'linewidth', 1);
+if prewhiten && dims == 1
+  ph3 = plot(sort(pvals_LR_pw),linspace(0,1,R), '--', 'color', col_LR, 'linewidth', 1);
+end
 
 if f_test
   legend([ph1 ph2],'Standard F-test', 'Modified $F$-test','location', 'best','interpreter','latex');
@@ -272,7 +258,7 @@ end
 
 fprintf('Exact test FPR at %.2f: %.4g\n', alpha, mean(pvals_E <= alpha) );
 fprintf('LR test FPR at %.2f: %.4g\n', alpha, mean(pvals_LR <= alpha) );
-if dims == 1
+if prewhiten && dims == 1
   fprintf('LR test (after prewhitening) FPR at %.2f: %.4g\n', alpha, mean(pvals_LR_pw <= alpha) );
 end
 

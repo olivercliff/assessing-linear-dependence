@@ -23,8 +23,9 @@ function [pr,resids,cs] = pcd(X,Y,varargin)
 % If you use this code for your research, please cite the following paper:
 %
 % Oliver M. Cliff, Leonardo Novelli, Ben D Fulcher, James M. Shine,
-% Joseph T. Lizier, "Exact Inference of Linear Dependence for Multiple
-% Autocorrelated Time Series," arXiv preprint arXiv:2003.03887 (2020).
+% Joseph T. Lizier, "Assessing the significance of directed and multivariate
+% measures of linear dependence between time series," Phys. Rev. Research 3,
+% 013145 (2021).
 %
 % This function is free software: you can redistribute it and/or modify it under
 % the terms of the GNU General Public License as published by the Free Software

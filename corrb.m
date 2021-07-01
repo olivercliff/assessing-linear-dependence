@@ -1,15 +1,12 @@
-function [coeff,pval,dist,stats] = pcorr(X,Y,varargin)
-%PC Correlation (partial or Pearson) for vector AR processes.
-%   PR = PCORR(X,Y) returns the scalar estimate of the correlation
-%   between the N-by-1 vectors X and Y.
+function [coeff,pval,stats] = corrb(X,varargin)
+% Pearson Correlation for vector AR processes.
+%   R = CORRB(X) returns the scalar estimate of the correlation
+%   between each pair of columns in the N-by-P matrix X.
 %
-%   PR = PCORR(X,Y,W,...) returns the scalar estimate of partial
-%   correlation between X and Y conditioned on the N-by-C matrix W.
-%
-%   [PR,PVAL] = PCORR(...) also returns PVAL, the p-value for testing the
+%   [R,PVAL] = CORRB(...) also returns PVAL, the p-value for testing the
 %   hypothesis of no correlation
 %
-%   [...] = PCORR(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies additional
+%   [...] = CORRB(...,'PARAM1',VAL1,'PARAM2',VAL2,...) specifies additional
 %   parameters and their values.  Valid parameters are the following:
 %
 %         Parameter                   Value
@@ -30,19 +27,14 @@ function [coeff,pval,dist,stats] = pcorr(X,Y,varargin)
 %                                     windowing, 'parzen' for Parzen
 %                                     windows, or 'bartlett' to use
 %                                     Barttlett's correction. 
-%          'multivariateBartlett'     False (default) to assume all pairs
-%                                     of correlations are independent, and
-%                                     true to Bartlett correct for full
-%                                     covariance matrix.
 %
 %   Example:
 %     % Compute the sample correlation between X and Y and obtain
 %     % both Student's t-test p-value and the exact test p-value.
 %     % (these values should be similar)
-%     X = randn(100,1);
-%     Y = randn(100,1);
-%     [PR,PVAL] = PCORR(X,Y)
-%     [PR,PVAL] = PCORR(X,Y,'test','finite')
+%     X = randn(100,2);
+%     [R,PVAL] = CORRB(X)
+%     [R,PVAL] = CORRB(X,'test','modified')
 
 % ------------------------------------------------------------------------------
 % Copyright (C) 2020, Oliver M. Cliff <oliver.m.cliff@gmail.com>,
@@ -70,40 +62,28 @@ function [coeff,pval,dist,stats] = pcorr(X,Y,varargin)
 
 parser = inputParser;
 
-addRequired(parser,'X',@isvector);
-addRequired(parser,'Y',@isvector);
-addOptional(parser,'W',[],@(x) (isnumeric(x) && ismatrix(x)));
+addRequired(parser,'X',@ismatrix);
 
-parser = parseParameters(parser,X,Y,varargin{:});
+parser = parseParameters(parser,X,varargin{:});
 
-params = varargin;
-if ~contains(parser.UsingDefaults,'W')
-  params = varargin(2:end);
-end
+coeff = corr(X);
 
-[pr,resids,cs] = pcd(X,Y,parser.Results.W,params{:});
-
-coeff = sum(pr);
-
+M = length(coeff);
+T = size(X,1);
 if nargout > 1
    
-  [eta,ess] = bartlett(resids,parser.Results.taperMethod,parser.Results.multivariateBartlett);
+  [eta,ess] = bartlett_mv(X,parser.Results.taperMethod);
 
   % Outputs for computing the significance (variance estimation and number of
   % condtiionals)
   stats.N_e = ess;
   stats.eta = eta;
-  stats.cs = cs;
+  stats.cs = zeros(M,1);
   stats.mv = parser.Results.multivariateBartlett;
-  stats.dof = length(cs);
-  stats.N_o = length(X);
+  stats.dof = length(stats.cs);
+  stats.N_o = T-1;
   stats.cmi = false;
-  
-  sig = @(coeff,stats) significance(coeff,stats,params{:});
-  
-  if nargout > 2
-    [pval,dist] = sig(coeff,stats);
-  else
-    pval = sig(coeff,stats);
-  end
+  stats.correlation_matrix = true;
+
+  pval = significance(coeff,stats,varargin{:});
 end

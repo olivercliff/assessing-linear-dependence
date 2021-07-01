@@ -141,7 +141,7 @@ elseif strcmp(parser.Results.test,'modified')
       stats.d_2 = diag(stats.N_e);
     end
   else
-    stats.d_2 = repmat(stats.N_o,size(estimate));
+    stats.d_2 = stats.N_o;
   end
   stats.d_2 = stats.d_2 - stats.cs - 2;
 
@@ -188,9 +188,10 @@ elseif strcmp(parser.Results.test,'modified')
     t = r.*sqrt((nu)./(1-r.^2));
     
     % ...and get p-value analytically
-    pval = 1-fcdf(t.^2,1,nu);
+    nus = repmat(nu,1,length(t));
+    pval = 1-fcdf(t.^2,1,nus);
     
-    if numel(nu) == 1 && nargout > 1
+    if nusnargout > 1
       if mv_correlation
         M = length(nu);
         dist = zeros(S,M);

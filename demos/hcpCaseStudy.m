@@ -87,7 +87,7 @@ end
 % - 3: GC, optimal embedding
 % - 4: GC, high embedding
 % - 5: GC with MV dim 2 (not in paper)
-which_test = 1;
+which_test = 4;
 
 % Do you want to use the F-test or the asymptotic LR (chi^2) test 
 f_test = false;
@@ -143,11 +143,11 @@ verbose = true;
 
 %% Prelim stuff
 
-fs = 0.72; % Sample time (s)
+fs = 1/0.72; % Sample time (s)
 
 if to_filter == 1
 %   fc = 0.2; % Low-pass (Hz)
-  fc = [0.01 0.08]; % Passband (Hz)
+  fc = [0.02 0.08]; % Passband (Hz)
   fo = 8; % Order
   Wn = fc./(fs/2);
   

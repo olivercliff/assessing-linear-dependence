@@ -87,34 +87,41 @@ end
 % - 3: GC, optimal embedding
 % - 4: GC, high embedding
 % - 5: GC with MV dim 2 (not in paper)
-which_test = 4;
+which_exp = 3;
+fprintf('Performing experiment %i. Edit script to modify test.\n', which_exp);
 
 % Do you want to use the F-test or the asymptotic LR (chi^2) test 
 f_test = false;
 
-switch which_test
+switch which_exp
   case 1
+    fprintf('Running experiments for mutual information between two univariate processes...\n');
     is_granger = false; % MI
     dims = 1; % 1D
   case 2
+    fprintf('Running experiments for mutual information between two bivariate processes...\n');
     is_granger = false; % MI
     dims = 2; % 2D
   case 3
+    fprintf('Running experiments for Granger causality (with auto-embedding) between two univariate processes...\n');
     is_granger = true; % GC
     config.p = 'auto';
     config.q = 'auto';
     dims = 1; % 1D
   case 4
+    fprintf('Running experiments for Granger causality (with fixed embedding of 100) between two univariate processes...\n');
     is_granger = true; % GC
     config.p = '100';
     config.q = '100'; % Overly optimistic (pessimistic?) embedding
     dims = 1; % 1D
   case 5
+    fprintf('Running experiments for Granger causality (with auto-embedding) between two bivariate processes...\n');
     is_granger = true; % GC
     config.p = 'auto';
     config.q = 'auto';
     dims = 2; % 1D
   case 6
+    fprintf('Running experiments for univariate Granger causality (with auto-embedding on predictee and fixed embedding of 1 on predictor) between two univariate processes...\n');
     is_granger = true; % GC
     config.p = 'auto';
     config.q = '1'; % auto-embedding
@@ -181,7 +188,6 @@ pvals_E = zeros(R,1); % exact test p-values
 rng(seed);
 
 % Run experiments
-fprintf('Running experiments...\n');
 for r = 1:R
   
   % Randomly sample subjects (without replacement) and..
@@ -268,6 +274,6 @@ if generate_tikz
   if ~exist('tikz','dir')
     mkdir('tikz');
   end
-  tikz_fname = sprintf('tikz/FPR_hcp_test-%d.tikz', which_test);
+  tikz_fname = sprintf('tikz/FPR_hcp_test-%d.tikz', which_exp);
   matlab2tikz( 'filename', tikz_fname, 'noSize', true );
 end

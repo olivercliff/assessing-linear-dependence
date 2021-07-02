@@ -1,5 +1,8 @@
 function [coeff,pval,stats] = corrb(X,varargin)
 % Pearson Correlation for vector AR processes.
+%   R = CORRB(X,Y) returns the scalar estimate of the correlation
+%   between two vectors X and Y of equal length.
+%
 %   R = CORRB(X) returns the scalar estimate of the correlation
 %   between each pair of columns in the N-by-P matrix X.
 %
@@ -63,27 +66,44 @@ function [coeff,pval,stats] = corrb(X,varargin)
 parser = inputParser;
 
 addRequired(parser,'X',@ismatrix);
+addOptional(parser,'Y',[],@(x) (isnumeric(x) && ismatrix(x)));
 
 parser = parseParameters(parser,X,varargin{:});
 
-coeff = corr(X);
+if ~contains(parser.UsingDefaults,'Y')
+  Y = parser.Results.Y;
+  assert(isvector(X));
+  assert(isvector(Y));
+  
+  params = varargin(2:end);
+  
+  if nargout > 2
+    [coeff,pval,stats] = pcorr(X,Y,params{:});
+  elseif nargout > 1
+    [coeff,pval] = pcorr(X,Y,params{:});
+  else
+    coeff = pcorr(X,Y,params{:});
+  end
+else
+  coeff = corr(X);
 
-M = length(coeff);
-T = size(X,1);
-if nargout > 1
-   
-  [eta,ess] = bartlett_mv(X,parser.Results.taperMethod);
+  M = length(coeff);
+  T = size(X,1);
+  if nargout > 1
 
-  % Outputs for computing the significance (variance estimation and number of
-  % condtiionals)
-  stats.N_e = ess;
-  stats.eta = eta;
-  stats.cs = zeros(M,1);
-  stats.mv = parser.Results.multivariateBartlett;
-  stats.dof = length(stats.cs);
-  stats.N_o = T-1;
-  stats.cmi = false;
-  stats.correlation_matrix = true;
+    [eta,ess] = bartlett_mv(X,parser.Results.taperMethod);
 
-  pval = significance(coeff,stats,varargin{:});
+    % Outputs for computing the significance (variance estimation and number of
+    % condtiionals)
+    stats.N_e = ess;
+    stats.eta = eta;
+    stats.cs = zeros(M,1);
+    stats.mv = parser.Results.multivariateBartlett;
+    stats.dof = length(stats.cs);
+    stats.N_o = T-1;
+    stats.cmi = false;
+    stats.correlation_matrix = true;
+
+    pval = significance(coeff,stats,varargin{:});
+  end
 end

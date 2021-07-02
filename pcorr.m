@@ -17,13 +17,6 @@ function [coeff,pval,dist,stats] = pcorr(X,Y,varargin)
 %                                     modified t-test,
 %                                     'finite' or 'asymptotic'
 %                                     uses the two-tailed t-test.
-%          'surrogates'               Integer denoting the number of
-%                                     surrogates used in generating the
-%                                     numerical null distributions.
-%          'varianceEstimator'        'bartlett' (default) uses Bartlett's
-%                                     formula assuming no
-%                                     cross-correlations, 'roy' makes no
-%                                     assumptions about cross-correlations.
 %          'taperMethod'              'none' (default) to compute
 %                                     sample autocorrelations without
 %                                     tapering, 'tukey' to use the Tukey

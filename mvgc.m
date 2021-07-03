@@ -15,11 +15,12 @@ function [F,pval,dist,stats] = mvgc(X,Y,varargin)
 %
 %         Parameter                   Value
 %          'p'                        'auto' (the default) uses automatic
-%                                     embedding, otherwise input the
-%                                     desired history length as a string
+%                                     embedding for the source process,
+%                                     otherwise input the desired history length
+%                                     as a string
 %          'q'                        'auto' (the default) uses automatic
-%                                     embedding, otherwise input the
-%                                     desired history length as a string
+%                                     embedding for the target process, otherwise
+%                                     input the desired history length as a string
 %          'test'                     'modified' (the default) uses our
 %                                     modified lambda-test,
 %                                     'finite' uses the F-test, and

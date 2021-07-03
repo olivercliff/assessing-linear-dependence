@@ -46,7 +46,7 @@ is_ac_tap = ismember(ac_lags,ks);
 ac_lambda_k = lambda_k(M+1:end);
 
 acfs = zeros(length(ac_lags),dim);
-parfor i = 1:dim
+for i = 1:dim
   A = zscore(Z(:,i,1));
   r_ii = autocorr(A,M-1);
   
@@ -54,17 +54,17 @@ parfor i = 1:dim
   r_ii(is_ac_tap) = r_ii(is_ac_tap) .* ac_lambda_k;
   r_ii(~is_ac_tap) = 0;
   
-  acfs(:,i) = r_ii
+  acfs(:,i) = r_ii;
 end
 
-parfor i = 1:dim  
+for i = 1:dim  
   vi = zeros(dim,1);
   acfi = acfs(:,i);
   for j = i+1:dim
     us = 1:N-1;
     vi(j) = (1 + 2*sum((N-us)'.*acfi.*acfs(:,j)) ./ N) ./ N;
   end
-  v(:,i) = vi
+  v(:,i) = vi;
 end
 
 v = v + v';

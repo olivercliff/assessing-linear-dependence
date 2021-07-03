@@ -34,37 +34,7 @@ prewhiten = false;
 % Download the HCP data (if it's not already there)
 datafile = './data/hcp_rsfMRI.mat';
 
-if ~exist(datafile,'file')
-  article_url = '<a href = "https://figshare.com/articles/hcp_rsfMRI_mat/12084636">https://figshare.com/articles/hcp_rsfMRI_mat/12084636</a>';
-  download_url = 'https://ndownloader.figshare.com/files/22217589';
-  
-  fprintf('HCP data not found in the expected location: %s.\n', datafile);
-  
-  fprintf('You can download it here: %s\n', article_url);
-  prompt = 'Do you want me to download it now? Y/N [Y]: ';
-  reply = input(prompt,'s');
-  
-  if isempty(reply)
-    reply = 'Y';
-  end
-  
-  if upper(reply) ~= 'Y'
-    fprintf('OK, exiting program now.\n');
-    return
-  end
-  
-  if ~exist('data','dir')
-    mkdir('data');
-  end
-  
-  fprintf('OK, getting it now. This may take a while...\n');
-  
-  % Download the hcp_rsfMRI.mat file from figshare
-  out_fname = websave(datafile,download_url);
-  fprintf(['Done. Human Connectome Project rsfMRI data ',...
-            'downloaded from figshare to:\n%s\n'],out_fname);
-
-end
+downloadHCPData
 
 %% Load HCP data
 
@@ -87,7 +57,9 @@ end
 % - 3: GC, optimal embedding
 % - 4: GC, high embedding
 % - 5: GC with MV dim 2 (not in paper)
-which_exp = 3;
+% - 6: GC with auto- and fixed-length embedding
+% - 7: Correlation (not in paper)
+which_exp = 7;
 fprintf('Performing experiment %i. Edit script to modify test.\n', which_exp);
 
 % Do you want to use the F-test or the asymptotic LR (chi^2) test 
@@ -125,6 +97,11 @@ switch which_exp
     is_granger = true; % GC
     config.p = 'auto';
     config.q = '1'; % auto-embedding
+    dims = 1; % 1D
+  case 7
+    fprintf('Running experiments for univariate Granger causality (with auto-embedding on predictee and fixed embedding of 1 on predictor) between two univariate processes...\n');
+    is_granger = false; % GC
+    is_corr = true; % GC
     dims = 1; % 1D
 end
 
@@ -229,6 +206,9 @@ for r = 1:R
     if prewhiten && dims == 1
       [measure_pw(r),pvals_LR_pw(r)] = mvgc(X_pw,Y_pw,W_pw,'p',config.p,'q',config.q,'test','asymptotic');
     end
+  elseif is_corr
+    [measure(r),pvals_E(r)] = corrb(X,Y);
+    [measure(r),pvals_LR(r)] = corrb(X,Y,'test','asymptotic');
   else
     [measure(r),pvals_E(r)] = mvmi(X,Y,W,'test','modified','surrogates',surrogates);
     [measure(r),pvals_LR(r)] = mvmi(X,Y,W,'test','asymptotic');

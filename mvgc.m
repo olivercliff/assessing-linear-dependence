@@ -45,8 +45,8 @@ function [F,pval,dist,stats] = mvgc(X,Y,varargin)
 %                                     covariance matrix.
 %
 %   Example:
-%     % Compute the Granger causality from Y to X and obtain the LR test p-value
-%     % and the exact test p-value.
+%     % Compute the Granger causality from Y to X and obtain the chi2-test p-value
+%     % and the modified-lambda test p-value.
 %     X = randn(100,5);
 %     Y = randn(100,3);
 %     [F,pval_exact] = MVGC(X,Y);

@@ -40,7 +40,7 @@ function [cmi,pval,dist,stats] = mvmi(X,Y,varargin)
 %
 %   Example:
 %     % Compute mutual information between X and Y and obtain
-%     % both Student's t-test p-value and the exact test p-value.
+%     % both the F-test p-value and the modified test p-value.
 %     % (these values should be similar)
 %     X = randn(100,3);
 %     Y = randn(100,5);

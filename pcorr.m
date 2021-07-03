@@ -29,13 +29,16 @@ function [coeff,pval,dist,stats] = pcorr(X,Y,varargin)
 %                                     covariance matrix.
 %
 %   Example:
-%     % Compute the sample correlation between X and Y and obtain
-%     % both Student's t-test p-value and the exact test p-value.
-%     % (these values should be similar)
+%     % Compute the sample partial correlation between X and Y, given W and obtain
+%     % both the F-test p-value and the modified test p-value.
+%     % (these values should be without autocorrelation)
 %     X = randn(100,1);
 %     Y = randn(100,1);
-%     [PR,PVAL] = PCORR(X,Y)
-%     [PR,PVAL] = PCORR(X,Y,'test','finite')
+%     W = randn(100,1);
+%     [PR,PVAL] = PCORR(X,Y,W)
+%     [PR,PVAL] = PCORR(X,Y,W,'test','finite')
+%
+%   See also <a href="matlab:help corrb">corrb</a>
 
 % ------------------------------------------------------------------------------
 % Copyright (C) 2020, Oliver M. Cliff <oliver.m.cliff@gmail.com>,
@@ -74,6 +77,8 @@ Y = reshape(Y,[],1);
 
 params = varargin;
 if ~contains(parser.UsingDefaults,'W')
+  assert(size(X,1) == size(Y,1));
+  assert(size(parser.Results.W,1) == size(X,1));
   params = varargin(2:end);
 end
 

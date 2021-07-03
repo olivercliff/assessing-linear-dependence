@@ -24,13 +24,24 @@ function [coeff,pval,stats] = corrb(X,varargin)
 %                                     windows, or 'bartlett' to use
 %                                     Barttlett's correction. 
 %
-%   Example:
+%   Example 1:
 %     % Compute the sample correlation between X and Y and obtain
-%     % both Student's t-test p-value and the exact test p-value.
-%     % (these values should be similar)
+%     % both the F-test p-value and the modified test p-value.
+%     % (these values should be similar without autocorrelation)
+%     X = randn(100,1);
+%     Y = randn(100,1);
+%     [R,PVAL] = CORRB(X,Y)
+%     [R,PVAL] = CORRB(X,Y,'test','modified')
+%
+%   Example 2:
+%     % Compute the sample correlation matrix of X and obtain
+%     % both the F-test p-value and the modified test p-value.
+%     % (these values should be similar without autocorrelation)
 %     X = randn(100,2);
 %     [R,PVAL] = CORRB(X)
 %     [R,PVAL] = CORRB(X,'test','modified')
+%
+%   See also <a href="matlab:help pcorr">pcorr</a>
 
 % ------------------------------------------------------------------------------
 % Copyright (C) 2020, Oliver M. Cliff <oliver.m.cliff@gmail.com>,

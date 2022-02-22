@@ -174,7 +174,7 @@ elseif strcmp(parser.Results.test,'modified')
     estimate = exp(-2*stats.to_cmi(estimate));
     
     % Proportion of surrogates less than statistic
-    pval = mean(estimate<=dist);
+    pval = 1-mean(estimate<=dist);
     
     if nargout > 1
       dist = sort(dist);

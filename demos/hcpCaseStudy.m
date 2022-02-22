@@ -59,7 +59,7 @@ end
 % - 5: GC with MV dim 2 (not in paper)
 % - 6: GC with auto- and fixed-length embedding
 % - 7: Correlation (not in paper)
-which_exp = 7;
+which_exp = 3;
 fprintf('Performing experiment %i. Edit script to modify test.\n', which_exp);
 
 % Do you want to use the F-test or the asymptotic LR (chi^2) test 
@@ -101,7 +101,6 @@ switch which_exp
   case 7
     fprintf('Running experiments for univariate Granger causality (with auto-embedding on predictee and fixed embedding of 1 on predictor) between two univariate processes...\n');
     is_granger = false; % GC
-    is_corr = true; % GC
     dims = 1; % 1D
 end
 
@@ -206,9 +205,6 @@ for r = 1:R
     if prewhiten && dims == 1
       [measure_pw(r),pvals_LR_pw(r)] = mvgc(X_pw,Y_pw,W_pw,'p',config.p,'q',config.q,'test','asymptotic');
     end
-  elseif is_corr
-    [measure(r),pvals_E(r)] = corrb(X,Y);
-    [measure(r),pvals_LR(r)] = corrb(X,Y,'test','asymptotic');
   else
     [measure(r),pvals_E(r)] = mvmi(X,Y,W,'test','modified','surrogates',surrogates);
     [measure(r),pvals_LR(r)] = mvmi(X,Y,W,'test','asymptotic');
